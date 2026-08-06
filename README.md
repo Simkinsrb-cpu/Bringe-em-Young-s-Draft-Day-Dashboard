@@ -1,0 +1,967 @@
+[indexs.html](https://github.com/user-attachments/files/30797667/indexs.html)
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Draft Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B1220;
+    --panel:#131B2E;
+    --panel-2:#1A2338;
+    --border:#223054;
+    --gold:#F2B134;
+    --gold-dark:#C98A16;
+    --teal:#2DD4BF;
+    --red:#FB7185;
+    --text:#EDF1F9;
+    --muted:#8A94AC;
+    --radius-lg:22px;
+    --radius-md:14px;
+    --radius-sm:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 15% -10%, rgba(242,177,52,0.10), transparent 45%),
+      radial-gradient(circle at 100% 0%, rgba(45,212,191,0.08), transparent 40%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    padding:28px 20px 60px;
+    min-height:100vh;
+  }
+  .wrap{max-width:1180px;margin:0 auto;position:relative;padding-top:46px;}
+
+  .reset-btn{
+    position:absolute;
+    top:0; right:0;
+    background:rgba(251,113,133,.08);
+    border:1.5px solid var(--red);
+    color:var(--red);
+    font-family:'Oswald',sans-serif;
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    padding:8px 16px;
+    border-radius:999px;
+    cursor:pointer;
+    transition:background .15s, transform .12s;
+    z-index:30;
+  }
+  .reset-btn:hover{background:rgba(251,113,133,.18); transform:translateY(-1px);}
+  .reset-btn:active{transform:translateY(0);}
+
+  /* ---------- Reset modal ---------- */
+  .modal-overlay{
+    display:none;
+    position:fixed; inset:0;
+    background:rgba(3,6,14,.72);
+    backdrop-filter:blur(3px);
+    align-items:center; justify-content:center;
+    z-index:100;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal-card{
+    background:linear-gradient(180deg,var(--panel-2),var(--panel));
+    border:1px solid var(--border);
+    border-radius:var(--radius-lg);
+    padding:26px;
+    width:100%;
+    max-width:340px;
+    box-shadow:0 30px 60px -14px rgba(0,0,0,.6);
+  }
+  .modal-card h3{
+    font-family:'Oswald',sans-serif;
+    font-size:17px; text-transform:uppercase; letter-spacing:.04em;
+    margin:0 0 10px; color:var(--red);
+  }
+  .modal-card p{
+    font-size:13px; color:var(--muted); margin:0 0 16px; line-height:1.5;
+  }
+  .modal-card input{
+    width:100%;
+    background:#0E1526;
+    border:1.5px solid var(--border);
+    color:var(--text);
+    font-family:'JetBrains Mono',monospace;
+    font-size:22px;
+    letter-spacing:.4em;
+    text-align:center;
+    padding:12px 14px;
+    border-radius:var(--radius-md);
+    outline:none;
+    box-sizing:border-box;
+  }
+  .modal-card input:focus{
+    border-color:var(--red);
+    box-shadow:0 0 0 3px rgba(251,113,133,.18);
+  }
+  .modal-error{
+    min-height:16px; font-size:12px; color:var(--red); font-weight:600; margin-top:8px;
+  }
+  .modal-actions{
+    display:flex; gap:10px; margin-top:16px;
+  }
+  .modal-btn{
+    flex:1;
+    padding:11px;
+    border-radius:999px;
+    font-family:'Oswald',sans-serif;
+    font-size:13px; font-weight:600; letter-spacing:.05em; text-transform:uppercase;
+    cursor:pointer;
+    border:1.5px solid transparent;
+  }
+  .modal-btn.cancel{
+    background:transparent; border-color:var(--border); color:var(--muted);
+  }
+  .modal-btn.cancel:hover{border-color:var(--muted); color:var(--text);}
+  .modal-btn.confirm{
+    background:var(--red); color:#2a0d10;
+  }
+  .modal-btn.confirm:hover{filter:brightness(1.08);}
+
+  .roster-modal{max-width:400px;}
+  .roster-modal-head{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:12px;
+  }
+  .roster-modal-head h3{margin:0; color:var(--gold);}
+  .roster-close{
+    background:transparent; border:none; color:var(--muted);
+    font-size:22px; line-height:1; cursor:pointer; padding:0 4px;
+  }
+  .roster-close:hover{color:var(--text);}
+  .roster-modal .log-list{max-height:340px; margin-top:0;}
+
+  .cap-card{cursor:pointer; transition:border-color .15s, transform .12s;}
+  .cap-card:hover{border-color:var(--gold); transform:translateY(-2px);}
+
+  /* ---------- Header ---------- */
+  header{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:16px;
+    margin-bottom:26px;
+    padding-bottom:18px;
+    border-bottom:1px solid var(--border);
+  }
+  .brand-eyebrow{
+    display:flex; align-items:center; gap:8px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px; letter-spacing:.14em; color:var(--gold);
+    text-transform:uppercase; margin-bottom:6px;
+  }
+  .live-dot{
+    width:7px;height:7px;border-radius:50%;background:var(--teal);
+    box-shadow:0 0 0 0 rgba(45,212,191,.6);
+    animation:pulse 1.8s infinite;
+  }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(45,212,191,.55);}
+    70%{box-shadow:0 0 0 8px rgba(45,212,191,0);}
+    100%{box-shadow:0 0 0 0 rgba(45,212,191,0);}
+  }
+  h1{
+    font-family:'Oswald',sans-serif;
+    font-weight:700;
+    font-size:clamp(28px,4vw,40px);
+    letter-spacing:.01em;
+    margin:0;
+    text-transform:uppercase;
+  }
+  .team-badge{
+    display:flex;
+    align-items:center;
+    gap:20px;
+  }
+  .team-badge-text{text-align:left;}
+  .team-badge-text .label{
+    font-size:13px; letter-spacing:.12em; color:var(--muted);
+    text-transform:uppercase; font-family:'JetBrains Mono',monospace;
+  }
+  .team-badge-text .value{
+    font-family:'Oswald',sans-serif;
+    font-size:42px; font-weight:700; color:var(--gold);
+    line-height:1.1;
+    text-transform:uppercase;
+  }
+  .team-badge img{
+    width:110px; height:110px;
+    object-fit:cover;
+    border-radius:28px;
+    border:3px solid var(--gold);
+    background:#0E1526;
+    box-shadow:0 10px 26px -8px rgba(242,177,52,.55);
+  }
+  .hdr-title{text-align:right;}
+
+  /* ---------- Layout ---------- */
+  .grid{
+    display:grid;
+    grid-template-columns:1fr 1.35fr;
+    gap:22px;
+    align-items:start;
+  }
+  @media (max-width:920px){
+    .grid{grid-template-columns:1fr;}
+  }
+  .card{
+    background:linear-gradient(180deg,var(--panel-2),var(--panel));
+    border:1px solid var(--border);
+    border-radius:var(--radius-lg);
+    padding:22px;
+  }
+  .card h2{
+    font-family:'Oswald',sans-serif;
+    font-size:15px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    margin:0 0 4px;
+    color:var(--text);
+  }
+  .card .sub{
+    font-size:12.5px; color:var(--muted); margin:0 0 18px;
+  }
+
+  /* ---------- Form ---------- */
+  .field-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    margin-bottom:12px;
+  }
+  .field-row.triple{grid-template-columns:1fr 1fr 1fr;}
+  .field{display:flex; flex-direction:column; gap:6px;}
+  .field label{
+    font-size:10.5px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--muted); font-weight:600;
+  }
+  .field input, .field select{
+    background:#0E1526;
+    border:1.5px solid var(--border);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    padding:11px 14px;
+    border-radius:var(--radius-md);
+    outline:none;
+    transition:border-color .15s, box-shadow .15s;
+    width:100%;
+    -webkit-appearance:none;
+    appearance:none;
+  }
+  input[type="search"]::-webkit-search-decoration,
+  input[type="search"]::-webkit-search-cancel-button,
+  input[type="search"]::-webkit-search-results-button,
+  input[type="search"]::-webkit-search-results-decoration{
+    -webkit-appearance:none;
+  }
+  .field input:read-only{ color:var(--muted); }
+  .field input:focus, .field select:focus{
+    border-color:var(--gold);
+    box-shadow:0 0 0 3px rgba(242,177,52,.18);
+  }
+  .field input::placeholder{color:#4c5670;}
+  .amt-wrap{position:relative;}
+  .amt-wrap span{
+    position:absolute; left:14px; top:50%; transform:translateY(-50%);
+    color:var(--muted); font-size:14px; pointer-events:none;
+  }
+  .amt-wrap input{padding-left:26px;}
+
+  .suggest-box{
+    position:absolute;
+    top:calc(100% + 4px);
+    left:0; right:0;
+    background:#0E1526;
+    border:1.5px solid var(--border);
+    border-radius:var(--radius-md);
+    max-height:230px;
+    overflow-y:auto;
+    z-index:20;
+    display:none;
+    box-shadow:0 14px 30px -10px rgba(0,0,0,.55);
+  }
+  .suggest-box.open{display:block;}
+  .suggest-item{
+    display:flex; align-items:center; gap:8px;
+    padding:9px 12px;
+    cursor:pointer;
+    font-size:13px;
+    border-bottom:1px solid var(--border);
+  }
+  .suggest-item:last-child{border-bottom:none;}
+  .suggest-item:hover, .suggest-item.active{background:var(--panel-2);}
+  .suggest-item .sname{flex:1; font-weight:600;}
+  .suggest-item .stag{
+    font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--muted);
+  }
+  .suggest-empty{padding:12px; font-size:12.5px; color:var(--muted); text-align:center;}
+  .suggest-item.drafted{opacity:.5;}
+  .suggest-item.drafted .sname{text-decoration:line-through;}
+  .suggest-item.drafted .stag{color:var(--red);}
+  .field input.drafted-field{
+    color:var(--red) !important;
+    opacity:.65;
+    background:#1a1220;
+  }
+
+  .btn-row{
+    display:flex;
+    gap:10px;
+    margin-top:8px;
+  }
+  #logBtn{
+    flex:1;
+    padding:14px;
+    border:none;
+    border-radius:999px;
+    background:linear-gradient(180deg,var(--gold),var(--gold-dark));
+    color:#241705;
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    font-size:15px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    cursor:pointer;
+    transition:transform .12s ease, box-shadow .12s ease;
+    box-shadow:0 8px 20px -6px rgba(242,177,52,.55);
+  }
+  #logBtn:hover{transform:translateY(-1px); box-shadow:0 10px 24px -6px rgba(242,177,52,.7);}
+  #logBtn:active{transform:translateY(0);}
+  #logBtn:disabled{
+    background:#2b3450; color:#6b7691; box-shadow:none; cursor:not-allowed;
+  }
+  #undoBtn{
+    flex:0 0 auto;
+    padding:14px 18px;
+    border:1.5px solid var(--border);
+    border-radius:999px;
+    background:transparent;
+    color:var(--muted);
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    font-size:13px;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    cursor:pointer;
+    transition:border-color .12s ease, color .12s ease;
+  }
+  #undoBtn:hover:not(:disabled){border-color:var(--red); color:var(--red);}
+  #undoBtn:disabled{opacity:.4; cursor:not-allowed;}
+
+  .del-pick-btn{
+    flex:0 0 auto;
+    padding:4px 9px;
+    border:1px solid var(--border);
+    border-radius:999px;
+    background:transparent;
+    color:var(--red);
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    font-size:10px;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    cursor:pointer;
+    transition:background .12s ease, border-color .12s ease;
+  }
+  .del-pick-btn:hover{background:rgba(251,113,133,.14); border-color:var(--red);}
+
+  .pick-row-header{
+    display:flex; align-items:center; gap:10px;
+    padding:0 12px 5px;
+    margin-top:14px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:9.5px; font-weight:700;
+    letter-spacing:.09em; text-transform:uppercase;
+    color:var(--muted);
+  }
+  .pick-row-header .col-pos{min-width:30px; text-align:center;}
+  .pick-row-header .col-player{flex:1;}
+  .pick-row-header .col-bye{min-width:52px;}
+  .pick-row-header .col-sal{min-width:44px; text-align:right;}
+  .pick-row-header .col-del{min-width:54px;}
+
+  .msg{
+    min-height:18px;
+    font-size:12.5px;
+    margin-top:10px;
+    font-weight:600;
+  }
+  .msg.error{color:var(--red);}
+  .msg.ok{color:var(--teal);}
+
+  /* ---------- Recent picks ---------- */
+  .log-heading{
+    margin-top:22px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--muted);
+    border-top:1px solid var(--border);
+    padding-top:14px;
+  }
+  .log-list{
+    margin-top:10px;
+    max-height:300px;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    padding-right:4px;
+  }
+  .log-list::-webkit-scrollbar{width:6px;}
+  .log-list::-webkit-scrollbar-thumb{background:var(--border); border-radius:10px;}
+  .pick-row{
+    display:flex; align-items:center; gap:10px;
+    background:#0E1526;
+    border:1px solid var(--border);
+    border-radius:var(--radius-sm);
+    padding:9px 12px;
+    font-size:13px;
+  }
+  .pos-chip{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px; font-weight:700;
+    padding:3px 7px; border-radius:7px;
+    background:rgba(242,177,52,.14); color:var(--gold);
+    min-width:30px; text-align:center;
+  }
+  .pick-row .pname{flex:1; font-weight:600;}
+  .pick-row .pbye{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px; color:var(--muted);
+    background:var(--panel-2); padding:3px 8px; border-radius:7px;
+    border:1px solid var(--border);
+  }
+  .pick-row .pamt{
+    font-family:'JetBrains Mono',monospace;
+    font-weight:700; color:var(--teal); min-width:44px; text-align:right;
+  }
+  .empty-note{color:var(--muted); font-size:12.5px; text-align:center; padding:14px 0;}
+
+  /* ---------- Cap tracker cards ---------- */
+  .cap-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+  .cap-card{
+    background:#0E1526;
+    border:1px solid var(--border);
+    border-radius:var(--radius-md);
+    padding:14px;
+    position:relative;
+    overflow:hidden;
+  }
+  .cap-card .code{
+    font-family:'Oswald',sans-serif;
+    font-size:16px; font-weight:600; letter-spacing:.03em;
+  }
+  .cap-card .slots{
+    font-size:10.5px; color:var(--muted); margin-top:1px;
+  }
+  .gauge-row{
+    display:flex; align-items:center; gap:12px; margin-top:10px;
+  }
+  .gauge{
+    width:46px; height:46px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .gauge-inner{
+    width:34px; height:34px; border-radius:50%;
+    background:#0E1526;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono',monospace;
+    font-size:9.5px; font-weight:700;
+  }
+  .cap-figures .left{
+    font-family:'JetBrains Mono',monospace;
+    font-size:17px; font-weight:700; line-height:1.1;
+  }
+  .cap-figures .of{
+    font-size:10px; color:var(--muted); margin-top:2px;
+  }
+
+  footer{
+    margin-top:28px;
+    text-align:center;
+    font-size:11.5px;
+    color:var(--muted);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <button id="resetBtn" class="reset-btn" title="Reset the draft">&#8635; Reset</button>
+
+  <header>
+    <div class="team-badge">
+      <img src="data:image/gif;base64,R0lGODlhjAByAPcAAAAAAAAICAAIEAAYGAAhIQApMQAxOQA5QgBCQgBKSgD/AAgICAgYGAhKSghSWghaWghaYwhjawhrcwhzcwh7hAiEjAiMlAiUpQicpQilrRBKShCEjBCcpRCttRCtvRC1vRC1xhC9xhC9zhDG1hDO1hDO3hDW3hDW5xDe5xDe7xg5ORicpRi1vRjn7yFSUiGEjCHGziHW5yHe5yHn7ylraymlrSnn7zEYITE5OTGEjDHn7zm9xjnn90JCSkJra0Ln90pSUkqMjErGzkrW3krn91IIGFIpKVIxUlKlpVoxOVpaWlpjY1rv92MQKWNzc2OEjGPv92tra2t7e2vv93MIKXMYEHMxIXMxOXOMlHPv93spUnsxa3t7e3utrXvv94QAKYRKSoSEhITGzoTv94wAKYwQMYwYEIwxMYxChIxKKYxSY4xjUoxrY4yMjIz395RKlJRrlJRzhJR7e5SEEJSUlJScnJScpZStrZwAKZwIMZyEEJyMhJyMlJycnJylpZyttZy1tZy9vaVCnKVCpaVaOaVanKVrpaWcnKWlpaWtraW9va0AMa0pCK1CnK1Kra1jUq2tra21ta29va3Gzq3OzrUAObUpMbVKvbVStbVjY7VjhLVjlLVrtbVza7WcrbW1tbW1vbW9vbXGzrXW3rXv970AOb17vb2ttb21vb29vb3Gzr3OzsYpEMa1vcbGxsbO1sbW1s5atc5azs57c87Ozs7n5873/9YAStYpCNY5ENZa3tZrWtZzlNaUhNbW1tbe3tbn59bv79b3996Ea96Ee96Ezt6Mtd6clN7e3t7n5+cASucIUuc5EOeE3ue1xufe3ufn5+9j7++M3u+UhO+cjO+tpe+1re/v7/dCEPdKIfeU7/ecjPellPelvfe1pfe9tff39/9CGP9KGP+E7/+chP+cjP+lnP+tnP+1rf/Gtf/W5////////////////////////////////////////////////////////////////////////////////////yH5BAEAAAoALAAAAACMAHIAAAj+ABUIHEiwoMGDCBMqXMiwocOHECNKnEixosWLGDMipMMlipKPIJVIoaOxpMmTDoH4kJGFyQ8iP17qiAlThg4ZOXAoQcmzp8UeNca0HPKyKEwdSJPeBDFixgmbL3T6nEq1YI8f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" alt="Bring'em Young helmet logo">
+      <div class="team-badge-text">
+        <div class="label">Franchise</div>
+        <div class="value">Bring'em Young</div>
+      </div>
+    </div>
+    <div class="hdr-title">
+      <div class="brand-eyebrow"><span class="live-dot"></span> AUCTION DRAFT &middot; LIVE BOARD</div>
+      <h1>Draft Command Center</h1>
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <!-- LEFT: cap tracker -->
+    <div class="card">
+      <h2>Cap Tracker</h2>
+      <p class="sub">Live per-team budget, updates the instant a pick is logged.</p>
+      <div class="cap-grid" id="capGrid"></div>
+    </div>
+
+    <!-- RIGHT: entry form + BY's picks -->
+    <div class="card">
+      <h2>Nominate a Pick</h2>
+      <p class="sub">Select a player, choose the winning team, log the price.</p>
+
+      <div class="field" style="position:relative;">
+        <label for="playerInput">Player</label>
+        <input id="playerInput" name="player-search" type="search" placeholder="Search the player pool…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <div id="suggestBox" class="suggest-box"></div>
+      </div>
+
+      <div class="field-row triple" style="margin-top:12px;">
+        <div class="field">
+          <label>NFL Team</label>
+          <input id="nflTeam" readonly placeholder="—">
+        </div>
+        <div class="field">
+          <label>Bye</label>
+          <input id="byeWeek" readonly placeholder="—">
+        </div>
+        <div class="field">
+          <label>Pos</label>
+          <input id="posField" readonly placeholder="—">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="draftTeam">Draft Team</label>
+          <select id="draftTeam"></select>
+        </div>
+        <div class="field">
+          <label for="amtInput">Amount</label>
+          <div class="amt-wrap">
+            <span>$</span>
+            <input id="amtInput" type="number" min="1" step="1" placeholder="0">
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button id="logBtn">Log Pick</button>
+        <button id="undoBtn" title="Remove the most recently logged pick">&#8630; Undo</button>
+      </div>
+      <div class="msg" id="formMsg"></div>
+
+      <div class="log-heading">BY — Picks Logged</div>
+      <div class="pick-row-header">
+        <span class="col-pos">Pos</span>
+        <span class="col-player">Player</span>
+        <span class="col-bye">Bye</span>
+        <span class="col-sal">Sal</span>
+        <span class="col-del"></span>
+      </div>
+      <div class="log-list" id="logList"></div>
+    </div>
+
+  </div>
+
+  <footer>Picks are saved to this browser automatically — closing the tab or restarting your PC won't lose them, as long as you reopen this same file in the same browser. Use Reset to start over on purpose.</footer>
+</div>
+
+<div id="resetOverlay" class="modal-overlay">
+  <div class="modal-card">
+    <h3>Reset the Draft</h3>
+    <p id="resetModalMsg">Enter the 4-digit PIN to clear every logged pick and reset all team caps back to $200.</p>
+    <input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off">
+    <div id="resetError" class="modal-error"></div>
+    <div class="modal-actions">
+      <button id="pinCancelBtn" class="modal-btn cancel">Cancel</button>
+      <button id="pinSubmitBtn" class="modal-btn confirm">Reset Draft</button>
+    </div>
+  </div>
+</div>
+
+<div id="teamRosterOverlay" class="modal-overlay">
+  <div class="modal-card roster-modal">
+    <div class="roster-modal-head">
+      <h3 id="rosterModalTitle">TEAM</h3>
+      <button id="rosterCloseBtn" class="roster-close" title="Close">&times;</button>
+    </div>
+    <div class="pick-row-header">
+      <span class="col-pos">Pos</span>
+      <span class="col-player">Player</span>
+      <span class="col-bye">Bye</span>
+      <span class="col-sal">Sal</span>
+      <span class="col-del"></span>
+    </div>
+    <div class="log-list" id="rosterModalList"></div>
+  </div>
+</div>
+
+<script>
+const PLAYERS = [{"name": "Jacoby Brissett", "team": "Arizona Cardinals", "bye": 14, "pos": "QB"}, {"name": "Carson Beck", "team": "Arizona Cardinals", "bye": 14, "pos": "QB"}, {"name": "Gardner Minshew", "team": "Arizona Cardinals", "bye": 14, "pos": "QB"}, {"name": "Jeremiyah Love", "team": "Arizona Cardinals", "bye": 14, "pos": "RB"}, {"name": "Tyler Allgeier", "team": "Arizona Cardinals", "bye": 14, "pos": "RB"}, {"name": "Bam Knight", "team": "Arizona Cardinals", "bye": 14, "pos": "RB"}, {"name": "Marvin Harrison Jr.", "team": "Arizona Cardinals", "bye": 14, "pos": "WR"}, {"name": "Michael Wilson", "team": "Arizona Cardinals", "bye": 14, "pos": "WR"}, {"name": "Kendrick Bourne", "team": "Arizona Cardinals", "bye": 14, "pos": "WR"}, {"name": "Reggie Virgil", "team": "Arizona Cardinals", "bye": 14, "pos": "WR"}, {"name": "Devin Duvernay", "team": "Arizona Cardinals", "bye": 14, "pos": "WR"}, {"name": "Jalen Brooks", "team": "Arizona Cardinals", "bye": 14, "pos": "WR"}, {"name": "Trey McBride", "team": "Arizona Cardinals", "bye": 14, "pos": "TE"}, {"name": "Elijah Higgins", "team": "Arizona Cardinals", "bye": 14, "pos": "TE"}, {"name": "Tip Reiman", "team": "Arizona Cardinals", "bye": 14, "pos": "TE"}, {"name": "Tua Tagovailoa", "team": "Atlanta Falcons", "bye": 11, "pos": "QB"}, {"name": "Michael Penix Jr.", "team": "Atlanta Falcons", "bye": 11, "pos": "QB"}, {"name": "Bijan Robinson", "team": "Atlanta Falcons", "bye": 11, "pos": "RB"}, {"name": "Brian Robinson Jr.", "team": "Atlanta Falcons", "bye": 11, "pos": "RB"}, {"name": "Drake London", "team": "Atlanta Falcons", "bye": 11, "pos": "WR"}, {"name": "Zachariah Branch", "team": "Atlanta Falcons", "bye": 11, "pos": "WR"}, {"name": "Jahan Dotson", "team": "Atlanta Falcons", "bye": 11, "pos": "WR"}, {"name": "Olamide Zaccheaus", "team": "Atlanta Falcons", "bye": 11, "pos": "WR"}, {"name": "Kyle Pitts", "team": "Atlanta Falcons", "bye": 11, "pos": "TE"}, {"name": "Austin Hooper", "team": "Atlanta Falcons", "bye": 11, "pos": "TE"}, {"name": "Charlie Woerner", "team": "Atlanta Falcons", "bye": 11, "pos": "TE"}, {"name": "Lamar Jackson", "team": "Baltimore Ravens", "bye": 13, "pos": "QB"}, {"name": "Tyler Huntley", "team": "Baltimore Ravens", "bye": 13, "pos": "QB"}, {"name": "Derrick Henry", "team": "Baltimore Ravens", "bye": 13, "pos": "RB"}, {"name": "Justice Hill", "team": "Baltimore Ravens", "bye": 13, "pos": "RB"}, {"name": "Adam Randall", "team": "Baltimore Ravens", "bye": 13, "pos": "RB"}, {"name": "Rasheen Ali", "team": "Baltimore Ravens", "bye": 13, "pos": "RB"}, {"name": "Zay Flowers", "team": "Baltimore Ravens", "bye": 13, "pos": "WR"}, {"name": "Rashod Bateman", "team": "Baltimore Ravens", "bye": 13, "pos": "WR"}, {"name": "Ja'Kobi Lane", "team": "Baltimore Ravens", "bye": 13, "pos": "WR"}, {"name": "Elijah Sarratt", "team": "Baltimore Ravens", "bye": 13, "pos": "WR"}, {"name": "Devontez Walker", "team": "Baltimore Ravens", "bye": 13, "pos": "WR"}, {"name": "LaJohntay Wester", "team": "Baltimore Ravens", "bye": 13, "pos": "WR"}, {"name": "Mark Andrews", "team": "Baltimore Ravens", "bye": 13, "pos": "TE"}, {"name": "Durham Smythe", "team": "Baltimore Ravens", "bye": 13, "pos": "TE"}, {"name": "Josh Cuevas", "team": "Baltimore Ravens", "bye": 13, "pos": "TE"}, {"name": "Matthew Hibner", "team": "Baltimore Ravens", "bye": 13, "pos": "TE"}, {"name": "Josh Allen", "team": "Buffalo Bills", "bye": 7, "pos": "QB"}, {"name": "Kyle Allen", "team": "Buffalo Bills", "bye": 7, "pos": "QB"}, {"name": "James Cook", "team": "Buffalo Bills", "bye": 7, "pos": "RB"}, {"name": "Ty Johnson", "team": "Buffalo Bills", "bye": 7, "pos": "RB"}, {"name": "Ray Davis", "team": "Buffalo Bills", "bye": 7, "pos": "RB"}, {"name": "DJ Moore", "team": "Buffalo Bills", "bye": 7, "pos": "WR"}, {"name": "Khalil Shakir", "team": "Buffalo Bills", "bye": 7, "pos": "WR"}, {"name": "Keon Coleman", "team": "Buffalo Bills", "bye": 7, "pos": "WR"}, {"name": "Josh Palmer", "team": "Buffalo Bills", "bye": 7, "pos": "WR"}, {"name": "Skyler Bell", "team": "Buffalo Bills", "bye": 7, "pos": "WR"}, {"name": "Tyrell Shavers", "team": "Buffalo Bills", "bye": 7, "pos": "WR"}, {"name": "Dalton Kincaid", "team": "Buffalo Bills", "bye": 7, "pos": "TE"}, {"name": "Dawson Knox", "team": "Buffalo Bills", "bye": 7, "pos": "TE"}, {"name": "Jackson Hawes", "team": "Buffalo Bills", "bye": 7, "pos": "TE"}, {"name": "Bryce Young", "team": "Carolina Panthers", "bye": 5, "pos": "QB"}, {"name": "Kenny Pickett", "team": "Carolina Panthers", "bye": 5, "pos": "QB"}, {"name": "Chuba Hubbard", "team": "Carolina Panthers", "bye": 5, "pos": "RB"}, {"name": "Jonathon Brooks", "team": "Carolina Panthers", "bye": 5, "pos": "RB"}, {"name": "Trevor Etienne", "team": "Carolina Panthers", "bye": 5, "pos": "RB"}, {"name": "Tetairoa McMillan", "team": "Carolina Panthers", "bye": 5, "pos": "WR"}, {"name": "Jalen Coker", "team": "Carolina Panthers", "bye": 5, "pos": "WR"}, {"name": "Xavier Legette", "team": "Carolina Panthers", "bye": 5, "pos": "WR"}, {"name": "Jimmy Horn Jr.", "team": "Carolina Panthers", "bye": 5, "pos": "WR"}, {"name": "Brycen Tremayne", "team": "Carolina Panthers", "bye": 5, "pos": "WR"}, {"name": "Ja'Tavion Sanders", "team": "Carolina Panthers", "bye": 5, "pos": "TE"}, {"name": "Tommy Tremble", "team": "Carolina Panthers", "bye": 5, "pos": "TE"}, {"name": "Mitchell Evans", "team": "Carolina Panthers", "bye": 5, "pos": "TE"}, {"name": "Caleb Williams", "team": "Chicago Bears", "bye": 10, "pos": "QB"}, {"name": "Tyson Bagent", "team": "Chicago Bears", "bye": 10, "pos": "QB"}, {"name": "D'Andre Swift", "team": "Chicago Bears", "bye": 10, "pos": "RB"}, {"name": "Kyle Monangai", "team": "Chicago Bears", "bye": 10, "pos": "RB"}, {"name": "Rome Odunze", "team": "Chicago Bears", "bye": 10, "pos": "WR"}, {"name": "Luther Burden III", "team": "Chicago Bears", "bye": 10, "pos": "WR"}, {"name": "Kalif Raymond", "team": "Chicago Bears", "bye": 10, "pos": "WR"}, {"name": "Zavion Thomas", "team": "Chicago Bears", "bye": 10, "pos": "WR"}, {"name": "Jahdae Walker", "team": "Chicago Bears", "bye": 10, "pos": "WR"}, {"name": "Colston Loveland", "team": "Chicago Bears", "bye": 10, "pos": "TE"}, {"name": "Cole Kmet", "team": "Chicago Bears", "bye": 10, "pos": "TE"}, {"name": "Sam Roush", "team": "Chicago Bears", "bye": 10, "pos": "TE"}, {"name": "Joe Burrow", "team": "Cincinnati Bengals", "bye": 6, "pos": "QB"}, {"name": "Joe Flacco", "team": "Cincinnati Bengals", "bye": 6, "pos": "QB"}, {"name": "Chase Brown", "team": "Cincinnati Bengals", "bye": 6, "pos": "RB"}, {"name": "Samaje Perine", "team": "Cincinnati Bengals", "bye": 6, "pos": "RB"}, {"name": "Tahj Brooks", "team": "Cincinnati Bengals", "bye": 6, "pos": "RB"}, {"name": "Ja'Marr Chase", "team": "Cincinnati Bengals", "bye": 6, "pos": "WR"}, {"name": "Tee Higgins", "team": "Cincinnati Bengals", "bye": 6, "pos": "WR"}, {"name": "Andrei Iosivas", "team": "Cincinnati Bengals", "bye": 6, "pos": "WR"}, {"name": "Mitchell Tinsley", "team": "Cincinnati Bengals", "bye": 6, "pos": "WR"}, {"name": "Colbie Young", "team": "Cincinnati Bengals", "bye": 6, "pos": "WR"}, {"name": "Charlie Jones", "team": "Cincinnati Bengals", "bye": 6, "pos": "WR"}, {"name": "Ke'Shawn Williams", "team": "Cincinnati Bengals", "bye": 6, "pos": "WR"}, {"name": "Mike Gesicki", "team": "Cincinnati Bengals", "bye": 6, "pos": "TE"}, {"name": "Erick All", "team": "Cincinnati Bengals", "bye": 6, "pos": "TE"}, {"name": "Drew Sample", "team": "Cincinnati Bengals", "bye": 6, "pos": "TE"}, {"name": "Tanner Hudson", "team": "Cincinnati Bengals", "bye": 6, "pos": "TE"}, {"name": "Deshaun Watson", "team": "Cleveland Browns", "bye": 11, "pos": "QB"}, {"name": "Shedeur Sanders", "team": "Cleveland Browns", "bye": 11, "pos": "QB"}, {"name": "Quinshon Judkins", "team": "Cleveland Browns", "bye": 11, "pos": "RB"}, {"name": "Dylan Sampson", "team": "Cleveland Browns", "bye": 11, "pos": "RB"}, {"name": "Michael Burton", "team": "Cleveland Browns", "bye": 11, "pos": "RB"}, {"name": "KC Concepcion", "team": "Cleveland Browns", "bye": 11, "pos": "WR"}, {"name": "Jerry Jeudy", "team": "Cleveland Browns", "bye": 11, "pos": "WR"}, {"name": "Denzel Boston", "team": "Cleveland Browns", "bye": 11, "pos": "WR"}, {"name": "Isaiah Bond", "team": "Cleveland Browns", "bye": 11, "pos": "WR"}, {"name": "Malachi Corley", "team": "Cleveland Browns", "bye": 11, "pos": "WR"}, {"name": "Cedric Tillman", "team": "Cleveland Browns", "bye": 11, "pos": "WR"}, {"name": "Gage Larvadain", "team": "Cleveland Browns", "bye": 11, "pos": "WR"}, {"name": "Harold Fannin Jr.", "team": "Cleveland Browns", "bye": 11, "pos": "TE"}, {"name": "Joe Royer", "team": "Cleveland Browns", "bye": 11, "pos": "TE"}, {"name": "Jack Stoll", "team": "Cleveland Browns", "bye": 11, "pos": "TE"}, {"name": "Dak Prescott", "team": "Dallas Cowboys", "bye": 14, "pos": "QB"}, {"name": "Sam Howell", "team": "Dallas Cowboys", "bye": 14, "pos": "QB"}, {"name": "Javonte Williams", "team": "Dallas Cowboys", "bye": 14, "pos": "RB"}, {"name": "Jaydon Blue", "team": "Dallas Cowboys", "bye": 14, "pos": "RB"}, {"name": "Malik Davis", "team": "Dallas Cowboys", "bye": 14, "pos": "RB"}, {"name": "Hunter Luepke", "team": "Dallas Cowboys", "bye": 14, "pos": "RB"}, {"name": "CeeDee Lamb", "team": "Dallas Cowboys", "bye": 14, "pos": "WR"}, {"name": "George Pickens", "team": "Dallas Cowboys", "bye": 14, "pos": "WR"}, {"name": "Ryan Flournoy", "team": "Dallas Cowboys", "bye": 14, "pos": "WR"}, {"name": "Kavontae Turpin", "team": "Dallas Cowboys", "bye": 14, "pos": "WR"}, {"name": "Jonathan Mingo", "team": "Dallas Cowboys", "bye": 14, "pos": "WR"}, {"name": "Jake Ferguson", "team": "Dallas Cowboys", "bye": 14, "pos": "TE"}, {"name": "Luke Schoonmaker", "team": "Dallas Cowboys", "bye": 14, "pos": "TE"}, {"name": "Brevyn Spann-Ford", "team": "Dallas Cowboys", "bye": 14, "pos": "TE"}, {"name": "Bo Nix", "team": "Denver Broncos", "bye": 10, "pos": "QB"}, {"name": "Jarrett Stidham", "team": "Denver Broncos", "bye": 10, "pos": "QB"}, {"name": "J.K. Dobbins", "team": "Denver Broncos", "bye": 10, "pos": "RB"}, {"name": "RJ Harvey", "team": "Denver Broncos", "bye": 10, "pos": "RB"}, {"name": "Jonah Coleman", "team": "Denver Broncos", "bye": 10, "pos": "RB"}, {"name": "Tyler Badie", "team": "Denver Broncos", "bye": 10, "pos": "RB"}, {"name": "Adam Prentice", "team": "Denver Broncos", "bye": 10, "pos": "RB"}, {"name": "Jaylen Waddle", "team": "Denver Broncos", "bye": 10, "pos": "WR"}, {"name": "Courtland Sutton", "team": "Denver Broncos", "bye": 10, "pos": "WR"}, {"name": "Pat Bryant", "team": "Denver Broncos", "bye": 10, "pos": "WR"}, {"name": "Marvin Mims", "team": "Denver Broncos", "bye": 10, "pos": "WR"}, {"name": "Troy Franklin", "team": "Denver Broncos", "bye": 10, "pos": "WR"}, {"name": "Michael Bandy", "team": "Denver Broncos", "bye": 10, "pos": "WR"}, {"name": "Evan Engram", "team": "Denver Broncos", "bye": 10, "pos": "TE"}, {"name": "Adam Trautman", "team": "Denver Broncos", "bye": 10, "pos": "TE"}, {"name": "Nate Adkins", "team": "Denver Broncos", "bye": 10, "pos": "TE"}, {"name": "Justin Joly", "team": "Denver Broncos", "bye": 10, "pos": "TE"}, {"name": "Jared Goff", "team": "Detroit Lions", "bye": 6, "pos": "QB"}, {"name": "Teddy Bridgewater", "team": "Detroit Lions", "bye": 6, "pos": "QB"}, {"name": "Jahmyr Gibbs", "team": "Detroit Lions", "bye": 6, "pos": "RB"}, {"name": "Isiah Pacheco", "team": "Detroit Lions", "bye": 6, "pos": "RB"}, {"name": "Jacob Saylors", "team": "Detroit Lions", "bye": 6, "pos": "RB"}, {"name": "Amon-Ra St. Brown", "team": "Detroit Lions", "bye": 6, "pos": "WR"}, {"name": "Jameson Williams", "team": "Detroit Lions", "bye": 6, "pos": "WR"}, {"name": "Isaac TeSlaa", "team": "Detroit Lions", "bye": 6, "pos": "WR"}, {"name": "Greg Dortch", "team": "Detroit Lions", "bye": 6, "pos": "WR"}, {"name": "Sam LaPorta", "team": "Detroit Lions", "bye": 6, "pos": "TE"}, {"name": "Brock Wright", "team": "Detroit Lions", "bye": 6, "pos": "TE"}, {"name": "Tyler Conklin", "team": "Detroit Lions", "bye": 6, "pos": "TE"}, {"name": "Jordan Love", "team": "Green Bay Packers", "bye": 11, "pos": "QB"}, {"name": "Tyrod Taylor", "team": "Green Bay Packers", "bye": 11, "pos": "QB"}, {"name": "Josh Jacobs", "team": "Green Bay Packers", "bye": 11, "pos": "RB"}, {"name": "MarShawn Lloyd", "team": "Green Bay Packers", "bye": 11, "pos": "RB"}, {"name": "Chris Brooks", "team": "Green Bay Packers", "bye": 11, "pos": "RB"}, {"name": "Christian Watson", "team": "Green Bay Packers", "bye": 11, "pos": "WR"}, {"name": "Matthew Golden", "team": "Green Bay Packers", "bye": 11, "pos": "WR"}, {"name": "Jayden Reed", "team": "Green Bay Packers", "bye": 11, "pos": "WR"}, {"name": "Savion Williams", "team": "Green Bay Packers", "bye": 11, "pos": "WR"}, {"name": "Bo Melton", "team": "Green Bay Packers", "bye": 11, "pos": "WR"}, {"name": "Skyy Moore", "team": "Green Bay Packers", "bye": 11, "pos": "WR"}, {"name": "Tucker Kraft", "team": "Green Bay Packers", "bye": 11, "pos": "TE"}, {"name": "Luke Musgrave", "team": "Green Bay Packers", "bye": 11, "pos": "TE"}, {"name": "C.J. Stroud", "team": "Houston Texans", "bye": 8, "pos": "QB"}, {"name": "Davis Mills", "team": "Houston Texans", "bye": 8, "pos": "QB"}, {"name": "David Montgomery", "team": "Houston Texans", "bye": 8, "pos": "RB"}, {"name": "Woody Marks", "team": "Houston Texans", "bye": 8, "pos": "RB"}, {"name": "Jawhar Jordan", "team": "Houston Texans", "bye": 8, "pos": "RB"}, {"name": "British Brooks", "team": "Houston Texans", "bye": 8, "pos": "RB"}, {"name": "Nico Collins", "team": "Houston Texans", "bye": 8, "pos": "WR"}, {"name": "Jayden Higgins", "team": "Houston Texans", "bye": 8, "pos": "WR"}, {"name": "Tank Dell", "team": "Houston Texans", "bye": 8, "pos": "WR"}, {"name": "Jaylin Noel", "team": "Houston Texans", "bye": 8, "pos": "WR"}, {"name": "Xavier Hutchinson", "team": "Houston Texans", "bye": 8, "pos": "WR"}, {"name": "Justin Watson", "team": "Houston Texans", "bye": 8, "pos": "WR"}, {"name": "Dalton Schultz", "team": "Houston Texans", "bye": 8, "pos": "TE"}, {"name": "Cade Stover", "team": "Houston Texans", "bye": 8, "pos": "TE"}, {"name": "Foster Moreau", "team": "Houston Texans", "bye": 8, "pos": "TE"}, {"name": "Marlin Klein", "team": "Houston Texans", "bye": 8, "pos": "TE"}, {"name": "Daniel Jones", "team": "Indianapolis Colts", "bye": 13, "pos": "QB"}, {"name": "Riley Leonard", "team": "Indianapolis Colts", "bye": 13, "pos": "QB"}, {"name": "Jonathan Taylor", "team": "Indianapolis Colts", "bye": 13, "pos": "RB"}, {"name": "DJ Giddens", "team": "Indianapolis Colts", "bye": 13, "pos": "RB"}, {"name": "Seth McGowan", "team": "Indianapolis Colts", "bye": 13, "pos": "RB"}, {"name": "Alec Pierce", "team": "Indianapolis Colts", "bye": 13, "pos": "WR"}, {"name": "Josh Downs", "team": "Indianapolis Colts", "bye": 13, "pos": "WR"}, {"name": "Nick Westbrook-Ikhine", "team": "Indianapolis Colts", "bye": 13, "pos": "WR"}, {"name": "Ashton Dulin", "team": "Indianapolis Colts", "bye": 13, "pos": "WR"}, {"name": "Anthony Gould", "team": "Indianapolis Colts", "bye": 13, "pos": "WR"}, {"name": "Laquon Treadwell", "team": "Indianapolis Colts", "bye": 13, "pos": "WR"}, {"name": "Tyler Warren", "team": "Indianapolis Colts", "bye": 13, "pos": "TE"}, {"name": "Mo Alie-Cox", "team": "Indianapolis Colts", "bye": 13, "pos": "TE"}, {"name": "Andrew Ogletree", "team": "Indianapolis Colts", "bye": 13, "pos": "TE"}, {"name": "Trevor Lawrence", "team": "Jacksonville Jaguars", "bye": 7, "pos": "QB"}, {"name": "Nick Mullens", "team": "Jacksonville Jaguars", "bye": 7, "pos": "QB"}, {"name": "Bhayshul Tuten", "team": "Jacksonville Jaguars", "bye": 7, "pos": "RB"}, {"name": "Chris Rodriguez", "team": "Jacksonville Jaguars", "bye": 7, "pos": "RB"}, {"name": "LeQuint Allen", "team": "Jacksonville Jaguars", "bye": 7, "pos": "RB"}, {"name": "DeeJay Dallas", "team": "Jacksonville Jaguars", "bye": 7, "pos": "RB"}, {"name": "Parker Washington", "team": "Jacksonville Jaguars", "bye": 7, "pos": "WR"}, {"name": "Jakobi Meyers", "team": "Jacksonville Jaguars", "bye": 7, "pos": "WR"}, {"name": "Brian Thomas Jr.", "team": "Jacksonville Jaguars", "bye": 7, "pos": "WR"}, {"name": "Travis Hunter", "team": "Jacksonville Jaguars", "bye": 7, "pos": "WR"}, {"name": "Josh Cameron", "team": "Jacksonville Jaguars", "bye": 7, "pos": "WR"}, {"name": "Brenton Strange", "team": "Jacksonville Jaguars", "bye": 7, "pos": "TE"}, {"name": "Nate Boerkircher", "team": "Jacksonville Jaguars", "bye": 7, "pos": "TE"}, {"name": "Tanner Koziol", "team": "Jacksonville Jaguars", "bye": 7, "pos": "TE"}, {"name": "Patrick Mahomes", "team": "Kansas City Chiefs", "bye": 5, "pos": "QB"}, {"name": "Justin Fields", "team": "Kansas City Chiefs", "bye": 5, "pos": "QB"}, {"name": "Ken Walker III", "team": "Kansas City Chiefs", "bye": 5, "pos": "RB"}, {"name": "Emari Demercado", "team": "Kansas City Chiefs", "bye": 5, "pos": "RB"}, {"name": "Emmett Johnson", "team": "Kansas City Chiefs", "bye": 5, "pos": "RB"}, {"name": "Brashard Smith", "team": "Kansas City Chiefs", "bye": 5, "pos": "RB"}, {"name": "Rashee Rice", "team": "Kansas City Chiefs", "bye": 5, "pos": "WR"}, {"name": "Xavier Worthy", "team": "Kansas City Chiefs", "bye": 5, "pos": "WR"}, {"name": "Tyquan Thornton", "team": "Kansas City Chiefs", "bye": 5, "pos": "WR"}, {"name": "Cyrus Allen", "team": "Kansas City Chiefs", "bye": 5, "pos": "WR"}, {"name": "Jalen Royals", "team": "Kansas City Chiefs", "bye": 5, "pos": "WR"}, {"name": "Nikko Remigio", "team": "Kansas City Chiefs", "bye": 5, "pos": "WR"}, {"name": "Travis Kelce", "team": "Kansas City Chiefs", "bye": 5, "pos": "TE"}, {"name": "Noah Gray", "team": "Kansas City Chiefs", "bye": 5, "pos": "TE"}, {"name": "Justin Herbert", "team": "Los Angeles Chargers", "bye": 7, "pos": "QB"}, {"name": "Trey Lance", "team": "Los Angeles Chargers", "bye": 7, "pos": "QB"}, {"name": "Omarion Hampton", "team": "Los Angeles Chargers", "bye": 7, "pos": "RB"}, {"name": "Keaton Mitchell", "team": "Los Angeles Chargers", "bye": 7, "pos": "RB"}, {"name": "Kimani Vidal", "team": "Los Angeles Chargers", "bye": 7, "pos": "RB"}, {"name": "Alec Ingold", "team": "Los Angeles Chargers", "bye": 7, "pos": "RB"}, {"name": "Ladd McConkey", "team": "Los Angeles Chargers", "bye": 7, "pos": "WR"}, {"name": "Quentin Johnston", "team": "Los Angeles Chargers", "bye": 7, "pos": "WR"}, {"name": "Tre Harris", "team": "Los Angeles Chargers", "bye": 7, "pos": "WR"}, {"name": "Brenen Thompson", "team": "Los Angeles Chargers", "bye": 7, "pos": "WR"}, {"name": "KeAndre Lambert-Smith", "team": "Los Angeles Chargers", "bye": 7, "pos": "WR"}, {"name": "Derius Davis", "team": "Los Angeles Chargers", "bye": 7, "pos": "WR"}, {"name": "Oronde Gadsden II", "team": "Los Angeles Chargers", "bye": 7, "pos": "TE"}, {"name": "David Njoku", "team": "Los Angeles Chargers", "bye": 7, "pos": "TE"}, {"name": "Charlie Kolar", "team": "Los Angeles Chargers", "bye": 7, "pos": "TE"}, {"name": "Matthew Stafford", "team": "Los Angeles Rams", "bye": 11, "pos": "QB"}, {"name": "Ty Simpson", "team": "Los Angeles Rams", "bye": 11, "pos": "QB"}, {"name": "Kyren Williams", "team": "Los Angeles Rams", "bye": 11, "pos": "RB"}, {"name": "Blake Corum", "team": "Los Angeles Rams", "bye": 11, "pos": "RB"}, {"name": "Puka Nacua", "team": "Los Angeles Rams", "bye": 11, "pos": "WR"}, {"name": "Davante Adams", "team": "Los Angeles Rams", "bye": 11, "pos": "WR"}, {"name": "Jordan Whittington", "team": "Los Angeles Rams", "bye": 11, "pos": "WR"}, {"name": "Konata Mumpfield", "team": "Los Angeles Rams", "bye": 11, "pos": "WR"}, {"name": "Xavier Smith", "team": "Los Angeles Rams", "bye": 11, "pos": "WR"}, {"name": "CJ Daniels", "team": "Los Angeles Rams", "bye": 11, "pos": "WR"}, {"name": "Terrance Ferguson", "team": "Los Angeles Rams", "bye": 11, "pos": "TE"}, {"name": "Colby Parkinson", "team": "Los Angeles Rams", "bye": 11, "pos": "TE"}, {"name": "Tyler Higbee", "team": "Los Angeles Rams", "bye": 11, "pos": "TE"}, {"name": "Davis Allen", "team": "Los Angeles Rams", "bye": 11, "pos": "TE"}, {"name": "Max Klare", "team": "Los Angeles Rams", "bye": 11, "pos": "TE"}, {"name": "Fernando Mendoza", "team": "Las Vegas Raiders", "bye": 13, "pos": "QB"}, {"name": "Kirk Cousins", "team": "Las Vegas Raiders", "bye": 13, "pos": "QB"}, {"name": "Ashton Jeanty", "team": "Las Vegas Raiders", "bye": 13, "pos": "RB"}, {"name": "Mike Washington Jr.", "team": "Las Vegas Raiders", "bye": 13, "pos": "RB"}, {"name": "Connor Heyward", "team": "Las Vegas Raiders", "bye": 13, "pos": "RB"}, {"name": "Dylan Laube", "team": "Las Vegas Raiders", "bye": 13, "pos": "RB"}, {"name": "Tre Tucker", "team": "Las Vegas Raiders", "bye": 13, "pos": "WR"}, {"name": "Jalen Nailor", "team": "Las Vegas Raiders", "bye": 13, "pos": "WR"}, {"name": "Jack Bech", "team": "Las Vegas Raiders", "bye": 13, "pos": "WR"}, {"name": "Dont'e Thornton Jr.", "team": "Las Vegas Raiders", "bye": 13, "pos": "WR"}, {"name": "Malik Benson", "team": "Las Vegas Raiders", "bye": 13, "pos": "WR"}, {"name": "Dareke Young", "team": "Las Vegas Raiders", "bye": 13, "pos": "WR"}, {"name": "Brock Bowers", "team": "Las Vegas Raiders", "bye": 13, "pos": "TE"}, {"name": "Michael Mayer", "team": "Las Vegas Raiders", "bye": 13, "pos": "TE"}, {"name": "Ian Thomas", "team": "Las Vegas Raiders", "bye": 13, "pos": "TE"}, {"name": "Malik Willis", "team": "Miami Dolphins", "bye": 6, "pos": "QB"}, {"name": "Quinn Ewers", "team": "Miami Dolphins", "bye": 6, "pos": "QB"}, {"name": "De'Von Achane", "team": "Miami Dolphins", "bye": 6, "pos": "RB"}, {"name": "Jaylen Wright", "team": "Miami Dolphins", "bye": 6, "pos": "RB"}, {"name": "Ollie Gordon II", "team": "Miami Dolphins", "bye": 6, "pos": "RB"}, {"name": "Malik Washington", "team": "Miami Dolphins", "bye": 6, "pos": "WR"}, {"name": "Jalen Tolbert", "team": "Miami Dolphins", "bye": 6, "pos": "WR"}, {"name": "Chris Bell", "team": "Miami Dolphins", "bye": 6, "pos": "WR"}, {"name": "Caleb Douglas", "team": "Miami Dolphins", "bye": 6, "pos": "WR"}, {"name": "Tutu Atwell", "team": "Miami Dolphins", "bye": 6, "pos": "WR"}, {"name": "Kevin Coleman Jr.", "team": "Miami Dolphins", "bye": 6, "pos": "WR"}, {"name": "Greg Dulcich", "team": "Miami Dolphins", "bye": 6, "pos": "TE"}, {"name": "Will Kacmarek", "team": "Miami Dolphins", "bye": 6, "pos": "TE"}, {"name": "Ben Sims", "team": "Miami Dolphins", "bye": 6, "pos": "TE"}, {"name": "Kyler Murray", "team": "Minnesota Vikings", "bye": 6, "pos": "QB"}, {"name": "J.J. McCarthy", "team": "Minnesota Vikings", "bye": 6, "pos": "QB"}, {"name": "Aaron Jones", "team": "Minnesota Vikings", "bye": 6, "pos": "RB"}, {"name": "Jordan Mason", "team": "Minnesota Vikings", "bye": 6, "pos": "RB"}, {"name": "Demond Claiborne", "team": "Minnesota Vikings", "bye": 6, "pos": "RB"}, {"name": "Max Bredeson", "team": "Minnesota Vikings", "bye": 6, "pos": "RB"}, {"name": "Justin Jefferson", "team": "Minnesota Vikings", "bye": 6, "pos": "WR"}, {"name": "Jordan Addison", "team": "Minnesota Vikings", "bye": 6, "pos": "WR"}, {"name": "Jauan Jennings", "team": "Minnesota Vikings", "bye": 6, "pos": "WR"}, {"name": "Tai Felton", "team": "Minnesota Vikings", "bye": 6, "pos": "WR"}, {"name": "Myles Price", "team": "Minnesota Vikings", "bye": 6, "pos": "WR"}, {"name": "Jeshaun Jones", "team": "Minnesota Vikings", "bye": 6, "pos": "WR"}, {"name": "T.J. Hockenson", "team": "Minnesota Vikings", "bye": 6, "pos": "TE"}, {"name": "Josh Oliver", "team": "Minnesota Vikings", "bye": 6, "pos": "TE"}, {"name": "Drake Maye", "team": "New England Patriots", "bye": 11, "pos": "QB"}, {"name": "Tommy DeVito", "team": "New England Patriots", "bye": 11, "pos": "QB"}, {"name": "TreVeyon Henderson", "team": "New England Patriots", "bye": 11, "pos": "RB"}, {"name": "Rhamondre Stevenson", "team": "New England Patriots", "bye": 11, "pos": "RB"}, {"name": "Reggie Gilliam", "team": "New England Patriots", "bye": 11, "pos": "RB"}, {"name": "A.J. Brown", "team": "New England Patriots", "bye": 11, "pos": "WR"}, {"name": "Romeo Doubs", "team": "New England Patriots", "bye": 11, "pos": "WR"}, {"name": "Kayshon Boutte", "team": "New England Patriots", "bye": 11, "pos": "WR"}, {"name": "DeMario Douglas", "team": "New England Patriots", "bye": 11, "pos": "WR"}, {"name": "Mack Hollins", "team": "New England Patriots", "bye": 11, "pos": "WR"}, {"name": "Kyle T. Williams", "team": "New England Patriots", "bye": 11, "pos": "WR"}, {"name": "Efton Chism III", "team": "New England Patriots", "bye": 11, "pos": "WR"}, {"name": "Hunter Henry", "team": "New England Patriots", "bye": 11, "pos": "TE"}, {"name": "Eli Raridon", "team": "New England Patriots", "bye": 11, "pos": "TE"}, {"name": "CJ Dippre", "team": "New England Patriots", "bye": 11, "pos": "TE"}, {"name": "Tyler Shough", "team": "New Orleans Saints", "bye": 8, "pos": "QB"}, {"name": "Spencer Rattler", "team": "New Orleans Saints", "bye": 8, "pos": "QB"}, {"name": "Travis Etienne", "team": "New Orleans Saints", "bye": 8, "pos": "RB"}, {"name": "Alvin Kamara", "team": "New Orleans Saints", "bye": 8, "pos": "RB"}, {"name": "Kendre Miller", "team": "New Orleans Saints", "bye": 8, "pos": "RB"}, {"name": "Chris Olave", "team": "New Orleans Saints", "bye": 8, "pos": "WR"}, {"name": "Jordyn Tyson", "team": "New Orleans Saints", "bye": 8, "pos": "WR"}, {"name": "Devaughn Vele", "team": "New Orleans Saints", "bye": 8, "pos": "WR"}, {"name": "Bryce Lance", "team": "New Orleans Saints", "bye": 8, "pos": "WR"}, {"name": "Barion Brown", "team": "New Orleans Saints", "bye": 8, "pos": "WR"}, {"name": "Mason Tipton", "team": "New Orleans Saints", "bye": 8, "pos": "WR"}, {"name": "Juwan Johnson", "team": "New Orleans Saints", "bye": 8, "pos": "TE"}, {"name": "Noah Fant", "team": "New Orleans Saints", "bye": 8, "pos": "TE"}, {"name": "Oscar Delp", "team": "New Orleans Saints", "bye": 8, "pos": "TE"}, {"name": "Jaxson Dart", "team": "New York Giants", "bye": 8, "pos": "QB"}, {"name": "Jameis Winston", "team": "New York Giants", "bye": 8, "pos": "QB"}, {"name": "Cam Skattebo", "team": "New York Giants", "bye": 8, "pos": "RB"}, {"name": "Tyrone Tracy Jr.", "team": "New York Giants", "bye": 8, "pos": "RB"}, {"name": "Devin Singletary", "team": "New York Giants", "bye": 8, "pos": "RB"}, {"name": "Patrick Ricard", "team": "New York Giants", "bye": 8, "pos": "RB"}, {"name": "Malik Nabers", "team": "New York Giants", "bye": 8, "pos": "WR"}, {"name": "Darnell Mooney", "team": "New York Giants", "bye": 8, "pos": "WR"}, {"name": "Darius Slayton", "team": "New York Giants", "bye": 8, "pos": "WR"}, {"name": "Odell Beckham Jr.", "team": "New York Giants", "bye": 8, "pos": "WR"}, {"name": "Malachi Fields", "team": "New York Giants", "bye": 8, "pos": "WR"}, {"name": "Calvin Austin III", "team": "New York Giants", "bye": 8, "pos": "WR"}, {"name": "Braxton Berrios", "team": "New York Giants", "bye": 8, "pos": "WR"}, {"name": "JuJu Smith-Schuster", "team": "New York Giants", "bye": 8, "pos": "WR"}, {"name": "Isaiah Likely", "team": "New York Giants", "bye": 8, "pos": "TE"}, {"name": "Theo Johnson", "team": "New York Giants", "bye": 8, "pos": "TE"}, {"name": "Chris Manhertz", "team": "New York Giants", "bye": 8, "pos": "TE"}, {"name": "Geno Smith", "team": "New York Jets", "bye": 13, "pos": "QB"}, {"name": "Cade Klubnik", "team": "New York Jets", "bye": 13, "pos": "QB"}, {"name": "Breece Hall", "team": "New York Jets", "bye": 13, "pos": "RB"}, {"name": "Braelon Allen", "team": "New York Jets", "bye": 13, "pos": "RB"}, {"name": "Isaiah Davis", "team": "New York Jets", "bye": 13, "pos": "RB"}, {"name": "Andrew Beck", "team": "New York Jets", "bye": 13, "pos": "RB"}, {"name": "Kene Nwangwu", "team": "New York Jets", "bye": 13, "pos": "RB"}, {"name": "Garrett Wilson", "team": "New York Jets", "bye": 13, "pos": "WR"}, {"name": "Adonai Mitchell", "team": "New York Jets", "bye": 13, "pos": "WR"}, {"name": "Omar Cooper Jr.", "team": "New York Jets", "bye": 13, "pos": "WR"}, {"name": "Isaiah Williams", "team": "New York Jets", "bye": 13, "pos": "WR"}, {"name": "Arian Smith", "team": "New York Jets", "bye": 13, "pos": "WR"}, {"name": "Kenyon Sadiq", "team": "New York Jets", "bye": 13, "pos": "TE"}, {"name": "Mason Taylor", "team": "New York Jets", "bye": 13, "pos": "TE"}, {"name": "Jeremy Ruckert", "team": "New York Jets", "bye": 13, "pos": "TE"}, {"name": "Jalen Hurts", "team": "Philadelphia Eagles", "bye": 10, "pos": "QB"}, {"name": "Tanner McKee", "team": "Philadelphia Eagles", "bye": 10, "pos": "QB"}, {"name": "Saquon Barkley", "team": "Philadelphia Eagles", "bye": 10, "pos": "RB"}, {"name": "Tank Bigsby", "team": "Philadelphia Eagles", "bye": 10, "pos": "RB"}, {"name": "Will Shipley", "team": "Philadelphia Eagles", "bye": 10, "pos": "RB"}, {"name": "DeVonta Smith", "team": "Philadelphia Eagles", "bye": 10, "pos": "WR"}, {"name": "Makai Lemon", "team": "Philadelphia Eagles", "bye": 10, "pos": "WR"}, {"name": "Dontayvion Wicks", "team": "Philadelphia Eagles", "bye": 10, "pos": "WR"}, {"name": "Marquise Brown", "team": "Philadelphia Eagles", "bye": 10, "pos": "WR"}, {"name": "Darius Cooper", "team": "Philadelphia Eagles", "bye": 10, "pos": "WR"}, {"name": "Britain Covey", "team": "Philadelphia Eagles", "bye": 10, "pos": "WR"}, {"name": "Dallas Goedert", "team": "Philadelphia Eagles", "bye": 10, "pos": "TE"}, {"name": "Eli Stowers", "team": "Philadelphia Eagles", "bye": 10, "pos": "TE"}, {"name": "Johnny Mundt", "team": "Philadelphia Eagles", "bye": 10, "pos": "TE"}, {"name": "Aaron Rodgers", "team": "Pittsburgh Steelers", "bye": 9, "pos": "QB"}, {"name": "Drew Allar", "team": "Pittsburgh Steelers", "bye": 9, "pos": "QB"}, {"name": "Jaylen Warren", "team": "Pittsburgh Steelers", "bye": 9, "pos": "RB"}, {"name": "Rico Dowdle", "team": "Pittsburgh Steelers", "bye": 9, "pos": "RB"}, {"name": "Riley Nowakowski", "team": "Pittsburgh Steelers", "bye": 9, "pos": "RB"}, {"name": "Kaleb Johnson", "team": "Pittsburgh Steelers", "bye": 9, "pos": "RB"}, {"name": "Michael Pittman Jr.", "team": "Pittsburgh Steelers", "bye": 9, "pos": "WR"}, {"name": "DK Metcalf", "team": "Pittsburgh Steelers", "bye": 9, "pos": "WR"}, {"name": "Germie Bernard", "team": "Pittsburgh Steelers", "bye": 9, "pos": "WR"}, {"name": "Ben Skowronek", "team": "Pittsburgh Steelers", "bye": 9, "pos": "WR"}, {"name": "Kaden Wetjen", "team": "Pittsburgh Steelers", "bye": 9, "pos": "WR"}, {"name": "Pat Freiermuth", "team": "Pittsburgh Steelers", "bye": 9, "pos": "TE"}, {"name": "Darnell Washington", "team": "Pittsburgh Steelers", "bye": 9, "pos": "TE"}, {"name": "Sam Darnold", "team": "Seattle Seahawks", "bye": 11, "pos": "QB"}, {"name": "Drew Lock", "team": "Seattle Seahawks", "bye": 11, "pos": "QB"}, {"name": "Jadarian Price", "team": "Seattle Seahawks", "bye": 11, "pos": "RB"}, {"name": "Zach Charbonnet", "team": "Seattle Seahawks", "bye": 11, "pos": "RB"}, {"name": "George Holani", "team": "Seattle Seahawks", "bye": 11, "pos": "RB"}, {"name": "Emanuel Wilson", "team": "Seattle Seahawks", "bye": 11, "pos": "RB"}, {"name": "Jaxon Smith-Njigba", "team": "Seattle Seahawks", "bye": 11, "pos": "WR"}, {"name": "Rashid Shaheed", "team": "Seattle Seahawks", "bye": 11, "pos": "WR"}, {"name": "Cooper Kupp", "team": "Seattle Seahawks", "bye": 11, "pos": "WR"}, {"name": "Tory Horton", "team": "Seattle Seahawks", "bye": 11, "pos": "WR"}, {"name": "A.J. Barner", "team": "Seattle Seahawks", "bye": 11, "pos": "TE"}, {"name": "Elijah Arroyo", "team": "Seattle Seahawks", "bye": 11, "pos": "TE"}, {"name": "Eric Saubert", "team": "Seattle Seahawks", "bye": 11, "pos": "TE"}, {"name": "Brock Purdy", "team": "San Francisco 49ers", "bye": 8, "pos": "QB"}, {"name": "Mac Jones", "team": "San Francisco 49ers", "bye": 8, "pos": "QB"}, {"name": "Christian McCaffrey", "team": "San Francisco 49ers", "bye": 8, "pos": "RB"}, {"name": "Jordan James", "team": "San Francisco 49ers", "bye": 8, "pos": "RB"}, {"name": "Kyle Juszczyk", "team": "San Francisco 49ers", "bye": 8, "pos": "RB"}, {"name": "Kaelon Black", "team": "San Francisco 49ers", "bye": 8, "pos": "RB"}, {"name": "Isaac Guerendo", "team": "San Francisco 49ers", "bye": 8, "pos": "RB"}, {"name": "Mike Evans", "team": "San Francisco 49ers", "bye": 8, "pos": "WR"}, {"name": "Deebo Samuel", "team": "San Francisco 49ers", "bye": 8, "pos": "WR"}, {"name": "De'Zhaun Stribling", "team": "San Francisco 49ers", "bye": 8, "pos": "WR"}, {"name": "Christian Kirk", "team": "San Francisco 49ers", "bye": 8, "pos": "WR"}, {"name": "Demarcus Robinson", "team": "San Francisco 49ers", "bye": 8, "pos": "WR"}, {"name": "Jacob Cowing", "team": "San Francisco 49ers", "bye": 8, "pos": "WR"}, {"name": "George Kittle", "team": "San Francisco 49ers", "bye": 8, "pos": "TE"}, {"name": "Jake Tonges", "team": "San Francisco 49ers", "bye": 8, "pos": "TE"}, {"name": "Luke Farrell", "team": "San Francisco 49ers", "bye": 8, "pos": "TE"}, {"name": "Baker Mayfield", "team": "Tampa Bay Buccaneers", "bye": 10, "pos": "QB"}, {"name": "Jake Browning", "team": "Tampa Bay Buccaneers", "bye": 10, "pos": "QB"}, {"name": "Bucky Irving", "team": "Tampa Bay Buccaneers", "bye": 10, "pos": "RB"}, {"name": "Kenneth Gainwell", "team": "Tampa Bay Buccaneers", "bye": 10, "pos": "RB"}, {"name": "Sean Tucker", "team": "Tampa Bay Buccaneers", "bye": 10, "pos": "RB"}, {"name": "Josh Williams", "team": "Tampa Bay Buccaneers", "bye": 10, "pos": "RB"}, {"name": "Emeka Egbuka", "team": "Tampa Bay Buccaneers", "bye": 10, "pos": "WR"}, {"name": "Chris Godwin", "team": "Tampa Bay Buccaneers", "bye": 10, "pos": "WR"}, {"name": "Jalen McMillan", "team": "Tampa Bay Buccaneers", "bye": 10, "pos": "WR"}, {"name": "Ted Hurst", "team": "Tampa Bay Buccaneers", "bye": 10, "pos": "WR"}, {"name": "Tez Johnson", "team": "Tampa Bay Buccaneers", "bye": 10, "pos": "WR"}, {"name": "Kameron Johnson", "team": "Tampa Bay Buccaneers", "bye": 10, "pos": "WR"}, {"name": "Cade Otton", "team": "Tampa Bay Buccaneers", "bye": 10, "pos": "TE"}, {"name": "Payne Durham", "team": "Tampa Bay Buccaneers", "bye": 10, "pos": "TE"}, {"name": "Ko Kieft", "team": "Tampa Bay Buccaneers", "bye": 10, "pos": "TE"}, {"name": "Cameron Ward", "team": "Tennessee Titans", "bye": 9, "pos": "QB"}, {"name": "Mitchell Trubisky", "team": "Tennessee Titans", "bye": 9, "pos": "QB"}, {"name": "Tony Pollard", "team": "Tennessee Titans", "bye": 9, "pos": "RB"}, {"name": "Tyjae Spears", "team": "Tennessee Titans", "bye": 9, "pos": "RB"}, {"name": "Nicholas Singleton", "team": "Tennessee Titans", "bye": 9, "pos": "RB"}, {"name": "Carnell Tate", "team": "Tennessee Titans", "bye": 9, "pos": "WR"}, {"name": "Wan'Dale Robinson", "team": "Tennessee Titans", "bye": 9, "pos": "WR"}, {"name": "Calvin Ridley", "team": "Tennessee Titans", "bye": 9, "pos": "WR"}, {"name": "Chimere Dike", "team": "Tennessee Titans", "bye": 9, "pos": "WR"}, {"name": "Elic Ayomanor", "team": "Tennessee Titans", "bye": 9, "pos": "WR"}, {"name": "Mason Kinsey", "team": "Tennessee Titans", "bye": 9, "pos": "WR"}, {"name": "Gunnar Helm", "team": "Tennessee Titans", "bye": 9, "pos": "TE"}, {"name": "Daniel Bellinger", "team": "Tennessee Titans", "bye": 9, "pos": "TE"}, {"name": "Jayden Daniels", "team": "Washington Commanders", "bye": 7, "pos": "QB"}, {"name": "Marcus Mariota", "team": "Washington Commanders", "bye": 7, "pos": "QB"}, {"name": "Rachaad White", "team": "Washington Commanders", "bye": 7, "pos": "RB"}, {"name": "Jacory Croskey-Merritt", "team": "Washington Commanders", "bye": 7, "pos": "RB"}, {"name": "Kaytron Allen", "team": "Washington Commanders", "bye": 7, "pos": "RB"}, {"name": "Terry McLaurin", "team": "Washington Commanders", "bye": 7, "pos": "WR"}, {"name": "Antonio Williams", "team": "Washington Commanders", "bye": 7, "pos": "WR"}, {"name": "Dyami Brown", "team": "Washington Commanders", "bye": 7, "pos": "WR"}, {"name": "Treylon Burks", "team": "Washington Commanders", "bye": 7, "pos": "WR"}, {"name": "Jaylin Lane", "team": "Washington Commanders", "bye": 7, "pos": "WR"}, {"name": "Luke McCaffrey", "team": "Washington Commanders", "bye": 7, "pos": "WR"}, {"name": "Chigoziem Okonkwo", "team": "Washington Commanders", "bye": 7, "pos": "TE"}, {"name": "John Bates", "team": "Washington Commanders", "bye": 7, "pos": "TE"}, {"name": "Ben Sinnott", "team": "Washington Commanders", "bye": 7, "pos": "TE"}, {"name": "Cardinals", "team": "Arizona Cardinals", "bye": 14, "pos": "D"}, {"name": "Falcons", "team": "Atlanta Falcons", "bye": 11, "pos": "D"}, {"name": "Ravens", "team": "Baltimore Ravens", "bye": 13, "pos": "D"}, {"name": "Bills", "team": "Buffalo Bills", "bye": 7, "pos": "D"}, {"name": "Panthers", "team": "Carolina Panthers", "bye": 5, "pos": "D"}, {"name": "Bears", "team": "Chicago Bears", "bye": 10, "pos": "D"}, {"name": "Bengals", "team": "Cincinnati Bengals", "bye": 6, "pos": "D"}, {"name": "Browns", "team": "Cleveland Browns", "bye": 11, "pos": "D"}, {"name": "Cowboys", "team": "Dallas Cowboys", "bye": 14, "pos": "D"}, {"name": "Broncos", "team": "Denver Broncos", "bye": 10, "pos": "D"}, {"name": "Lions", "team": "Detroit Lions", "bye": 6, "pos": "D"}, {"name": "Packers", "team": "Green Bay Packers", "bye": 11, "pos": "D"}, {"name": "Texans", "team": "Houston Texans", "bye": 8, "pos": "D"}, {"name": "Colts", "team": "Indianapolis Colts", "bye": 13, "pos": "D"}, {"name": "Jaguars", "team": "Jacksonville Jaguars", "bye": 7, "pos": "D"}, {"name": "Chiefs", "team": "Kansas City Chiefs", "bye": 5, "pos": "D"}, {"name": "Raiders", "team": "Las Vegas Raiders", "bye": 13, "pos": "D"}, {"name": "Chargers", "team": "Los Angeles Chargers", "bye": 7, "pos": "D"}, {"name": "Rams", "team": "Los Angeles Rams", "bye": 11, "pos": "D"}, {"name": "Dolphins", "team": "Miami Dolphins", "bye": 6, "pos": "D"}, {"name": "Vikings", "team": "Minnesota Vikings", "bye": 6, "pos": "D"}, {"name": "Patriots", "team": "New England Patriots", "bye": 11, "pos": "D"}, {"name": "Saints", "team": "New Orleans Saints", "bye": 8, "pos": "D"}, {"name": "Giants", "team": "New York Giants", "bye": 8, "pos": "D"}, {"name": "Jets", "team": "New York Jets", "bye": 13, "pos": "D"}, {"name": "Eagles", "team": "Philadelphia Eagles", "bye": 10, "pos": "D"}, {"name": "Steelers", "team": "Pittsburgh Steelers", "bye": 9, "pos": "D"}, {"name": "49ers", "team": "San Francisco 49ers", "bye": 8, "pos": "D"}, {"name": "Seahawks", "team": "Seattle Seahawks", "bye": 11, "pos": "D"}, {"name": "Buccaneers", "team": "Tampa Bay Buccaneers", "bye": 10, "pos": "D"}, {"name": "Titans", "team": "Tennessee Titans", "bye": 9, "pos": "D"}, {"name": "Commanders", "team": "Washington Commanders", "bye": 7, "pos": "D"}, {"name": "Chad Ryland", "team": "Arizona Cardinals", "bye": 14, "pos": "K"}, {"name": "Nick Folk", "team": "Atlanta Falcons", "bye": 11, "pos": "K"}, {"name": "Tyler Loop", "team": "Baltimore Ravens", "bye": 13, "pos": "K"}, {"name": "Tyler Bass", "team": "Buffalo Bills", "bye": 7, "pos": "K"}, {"name": "Ryan Fitzgerald", "team": "Carolina Panthers", "bye": 5, "pos": "K"}, {"name": "Cairo Santos", "team": "Chicago Bears", "bye": 10, "pos": "K"}, {"name": "Evan McPherson", "team": "Cincinnati Bengals", "bye": 6, "pos": "K"}, {"name": "Andre Szmyt", "team": "Cleveland Browns", "bye": 11, "pos": "K"}, {"name": "Brandon Aubrey", "team": "Dallas Cowboys", "bye": 14, "pos": "K"}, {"name": "Wil Lutz", "team": "Denver Broncos", "bye": 10, "pos": "K"}, {"name": "Jake Bates", "team": "Detroit Lions", "bye": 6, "pos": "K"}, {"name": "Trey Smack", "team": "Green Bay Packers", "bye": 11, "pos": "K"}, {"name": "Ka'imi Fairbairn", "team": "Houston Texans", "bye": 8, "pos": "K"}, {"name": "Spencer Shrader", "team": "Indianapolis Colts", "bye": 13, "pos": "K"}, {"name": "Cam Little", "team": "Jacksonville Jaguars", "bye": 7, "pos": "K"}, {"name": "Harrison Butker", "team": "Kansas City Chiefs", "bye": 5, "pos": "K"}, {"name": "Matt Gay", "team": "Las Vegas Raiders", "bye": 13, "pos": "K"}, {"name": "Cameron Dicker", "team": "Los Angeles Chargers", "bye": 7, "pos": "K"}, {"name": "Harrison Mevis", "team": "Los Angeles Rams", "bye": 11, "pos": "K"}, {"name": "Riley Patterson", "team": "Miami Dolphins", "bye": 6, "pos": "K"}, {"name": "Will Reichard", "team": "Minnesota Vikings", "bye": 6, "pos": "K"}, {"name": "Andres Borregales", "team": "New England Patriots", "bye": 11, "pos": "K"}, {"name": "Charlie Smyth", "team": "New Orleans Saints", "bye": 8, "pos": "K"}, {"name": "Ben Sauls", "team": "New York Giants", "bye": 8, "pos": "K"}, {"name": "Jason Sanders", "team": "New York Jets", "bye": 13, "pos": "K"}, {"name": "Jake Elliott", "team": "Philadelphia Eagles", "bye": 10, "pos": "K"}, {"name": "Chris Boswell", "team": "Pittsburgh Steelers", "bye": 9, "pos": "K"}, {"name": "Jason Myers", "team": "Seattle Seahawks", "bye": 11, "pos": "K"}, {"name": "Eddy Pineiro", "team": "San Francisco 49ers", "bye": 8, "pos": "K"}, {"name": "Chase McLaughlin", "team": "Tampa Bay Buccaneers", "bye": 10, "pos": "K"}, {"name": "Joey Slye", "team": "Tennessee Titans", "bye": 9, "pos": "K"}, {"name": "Jake Moody", "team": "Washington Commanders", "bye": 7, "pos": "K"}, {"name": "WTFIT?-1", "team": "N/A", "bye": null, "pos": "ATH"}, {"name": "WTFIT?-2", "team": "N/A", "bye": null, "pos": "ATH"}, {"name": "WTFIT?-3", "team": "N/A", "bye": null, "pos": "ATH"}, {"name": "TOKEN SC", "team": "N/A", "bye": null, "pos": "N/A"}, {"name": "SITTIN SC", "team": "N/A", "bye": null, "pos": "N/A"}];
+const TEAMS = ["BB", "BY", "DEI", "FISH", "GH", "KC", "MoP", "OS", "PGP", "SLP"];
+const SEED_PICKS = [{"player": "Jacoby Brissett", "nflTeam": "Arizona Cardinals", "bye": 14, "pos": "QB", "draftTeam": "FISH", "amt": 45}, {"player": "Josh Allen", "nflTeam": "Buffalo Bills", "bye": 7, "pos": "QB", "draftTeam": "BY", "amt": 12}, {"player": "Dak Prescott", "nflTeam": "Dallas Cowboys", "bye": 14, "pos": "QB", "draftTeam": "PGP", "amt": 4}, {"player": "Pat Bryant", "nflTeam": "Denver Broncos", "bye": 10, "pos": "WR", "draftTeam": "DEI", "amt": 24}, {"player": "Tee Higgins", "nflTeam": "Cincinnati Bengals", "bye": 6, "pos": "WR", "draftTeam": "FISH", "amt": 32}, {"player": "Derrick Henry", "nflTeam": "Baltimore Ravens", "bye": 13, "pos": "RB", "draftTeam": "GH", "amt": 6}, {"player": "Carson Beck", "nflTeam": "Arizona Cardinals", "bye": 14, "pos": "QB", "draftTeam": "KC", "amt": 15}, {"player": "Chase Brown", "nflTeam": "Cincinnati Bengals", "bye": 6, "pos": "RB", "draftTeam": "MoP", "amt": 42}, {"player": "Marvin Mims", "nflTeam": "Denver Broncos", "bye": 10, "pos": "WR", "draftTeam": "OS", "amt": 42}, {"player": "Reggie Virgil", "nflTeam": "Arizona Cardinals", "bye": 14, "pos": "WR", "draftTeam": "PGP", "amt": 28}, {"player": "Dawson Knox", "nflTeam": "Buffalo Bills", "bye": 7, "pos": "TE", "draftTeam": "SLP", "amt": 11}, {"player": "Zachariah Branch", "nflTeam": "Atlanta Falcons", "bye": 11, "pos": "WR", "draftTeam": "SLP", "amt": 32}, {"player": "Kendrick Bourne", "nflTeam": "Arizona Cardinals", "bye": 14, "pos": "WR", "draftTeam": "KC", "amt": 22}, {"player": "Ray Davis", "nflTeam": "Buffalo Bills", "bye": 7, "pos": "RB", "draftTeam": "PGP", "amt": 22}, {"player": "Caleb Williams", "nflTeam": "Chicago Bears", "bye": 10, "pos": "QB", "draftTeam": "BY", "amt": 19}, {"player": "Erick All", "nflTeam": "Cincinnati Bengals", "bye": 6, "pos": "TE", "draftTeam": "BY", "amt": 4}, {"player": "Matthew Hibner", "nflTeam": "Baltimore Ravens", "bye": 13, "pos": "TE", "draftTeam": "BB", "amt": 44}, {"player": "Cap Penalty", "nflTeam": "", "bye": null, "pos": null, "draftTeam": "SLP", "amt": 4}, {"player": "Cap Penalty", "nflTeam": "", "bye": null, "pos": null, "draftTeam": "DEI", "amt": 12}, {"player": "Bryce Young", "nflTeam": "Carolina Panthers", "bye": 5, "pos": "QB", "draftTeam": "BB", "amt": 44}, {"player": "Xavier Legette", "nflTeam": "Carolina Panthers", "bye": 5, "pos": "WR", "draftTeam": "GH", "amt": 44}, {"player": "Devin Duvernay", "nflTeam": "Arizona Cardinals", "bye": 14, "pos": "WR", "draftTeam": "SLP", "amt": 34}];
+const TOTAL_BUDGET = 200;
+
+const STORAGE_KEY = 'draftCommandCenter_picks_v1';
+
+function loadPicks() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return []; // storage unavailable (e.g. private browsing, sandboxed preview) — fall back to in-memory only
+  }
+}
+
+function savePicks() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(picks));
+  } catch (e) {
+    // storage unavailable — picks still work for this session, just won't survive a reload
+  }
+}
+
+let picks = loadPicks();
+
+const playerByName = {};
+PLAYERS.forEach(p => { playerByName[p.name.toLowerCase()] = p; });
+
+// ---------- populate static controls ----------
+const draftTeamSelect = document.getElementById('draftTeam');
+TEAMS.forEach(t => {
+  const opt = document.createElement('option');
+  opt.value = t; opt.textContent = t;
+  draftTeamSelect.appendChild(opt);
+});
+
+const playerInput = document.getElementById('playerInput');
+const suggestBox = document.getElementById('suggestBox');
+const nflTeamField = document.getElementById('nflTeam');
+const byeField = document.getElementById('byeWeek');
+const posField = document.getElementById('posField');
+const amtInput = document.getElementById('amtInput');
+const formMsg = document.getElementById('formMsg');
+const logBtn = document.getElementById('logBtn');
+const undoBtn = document.getElementById('undoBtn');
+
+let selectedPlayer = null; // the confirmed match, set only when a suggestion is chosen
+
+function isDrafted(name) {
+  return picks.find(pk => pk.player.toLowerCase() === name.toLowerCase()) || null;
+}
+
+function clearAutoFields() {
+  nflTeamField.value = '';
+  byeField.value = '';
+  posField.value = '';
+  selectedPlayer = null;
+  nflTeamField.classList.remove('drafted-field');
+  byeField.classList.remove('drafted-field');
+  posField.classList.remove('drafted-field');
+  logBtn.disabled = false;
+}
+
+function applyPlayer(p) {
+  playerInput.value = p.name;
+  nflTeamField.value = p.team;
+  byeField.value = p.bye;
+  posField.value = p.pos;
+  selectedPlayer = p;
+  closeSuggestions();
+
+  const draftedPick = isDrafted(p.name);
+  if (draftedPick) {
+    nflTeamField.classList.add('drafted-field');
+    byeField.classList.add('drafted-field');
+    posField.classList.add('drafted-field');
+    formMsg.textContent = `Already drafted by ${draftedPick.draftTeam} for $${draftedPick.amt}.`;
+    formMsg.className = 'msg error';
+    logBtn.disabled = true;
+  } else {
+    nflTeamField.classList.remove('drafted-field');
+    byeField.classList.remove('drafted-field');
+    posField.classList.remove('drafted-field');
+    formMsg.textContent = '';
+    logBtn.disabled = false;
+  }
+}
+
+function closeSuggestions() {
+  suggestBox.classList.remove('open');
+  suggestBox.innerHTML = '';
+}
+
+// Search only the Player-name field (Rosters column 1), never team/pos/bye.
+function searchPlayers(query) {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  return PLAYERS.filter(p => p.name.toLowerCase().includes(q)).slice(0, 8);
+}
+
+function renderSuggestions(matches) {
+  suggestBox.innerHTML = '';
+  if (matches.length === 0) {
+    suggestBox.innerHTML = '<div class="suggest-empty">No player matches that name.</div>';
+    suggestBox.classList.add('open');
+    return;
+  }
+  matches.forEach(p => {
+    const draftedPick = isDrafted(p.name);
+    const item = document.createElement('div');
+    item.className = 'suggest-item' + (draftedPick ? ' drafted' : '');
+    const tag = draftedPick ? `Drafted · ${draftedPick.draftTeam}` : `${p.pos} · Bye ${p.bye}`;
+    item.innerHTML = `<span class="sname">${p.name}</span><span class="stag">${tag}</span>`;
+    item.addEventListener('mousedown', (e) => { e.preventDefault(); applyPlayer(p); });
+    suggestBox.appendChild(item);
+  });
+  suggestBox.classList.add('open');
+}
+
+playerInput.addEventListener('input', () => {
+  clearAutoFields();
+  const matches = searchPlayers(playerInput.value);
+  if (playerInput.value.trim() === '') { closeSuggestions(); return; }
+  renderSuggestions(matches);
+});
+
+playerInput.addEventListener('focus', () => {
+  if (playerInput.value.trim() !== '') renderSuggestions(searchPlayers(playerInput.value));
+});
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.field')) closeSuggestions();
+});
+
+function teamStats(code) {
+  const teamPicks = picks.filter(pk => pk.draftTeam === code);
+  const spent = teamPicks.reduce((s, pk) => s + pk.amt, 0);
+  const slots = teamPicks.filter(pk => pk.pos).length;
+  return { spent, left: TOTAL_BUDGET - spent, slots };
+}
+
+function gaugeColor(pct) {
+  if (pct > 0.5) return '#2DD4BF';
+  if (pct > 0.2) return '#F2B134';
+  return '#FB7185';
+}
+
+function buildPickRow(pk) {
+  const row = document.createElement('div');
+  row.className = 'pick-row';
+  row.innerHTML = `
+    <span class="pos-chip">${pk.pos || '—'}</span>
+    <span class="pname">${pk.player}</span>
+    <span class="pbye">${pk.bye != null ? pk.bye : '—'}</span>
+    <span class="pamt">$${pk.amt}</span>
+    <button class="del-pick-btn" title="Remove ${pk.player} from this roster">Delete</button>`;
+  row.querySelector('.del-pick-btn').addEventListener('click', () => {
+    const idx = picks.indexOf(pk);
+    if (idx !== -1) picks.splice(idx, 1);
+    savePicks();
+    render();
+  });
+  return row;
+}
+
+function fillPickList(container, teamCode) {
+  container.innerHTML = '';
+  const visible = picks.filter(pk => pk.draftTeam === teamCode).slice().reverse();
+  if (visible.length === 0) {
+    container.innerHTML = `<div class="empty-note">No ${teamCode} picks logged yet.</div>`;
+  } else {
+    visible.forEach(pk => container.appendChild(buildPickRow(pk)));
+  }
+}
+
+function render() {
+  undoBtn.disabled = picks.length === 0;
+
+  // Cap grid
+  const capGrid = document.getElementById('capGrid');
+  capGrid.innerHTML = '';
+  TEAMS.forEach(code => {
+    const { left, slots } = teamStats(code);
+    const pct = Math.max(0, left / TOTAL_BUDGET);
+    const color = gaugeColor(pct);
+    const deg = Math.round(pct * 360);
+    const card = document.createElement('div');
+    card.className = 'cap-card';
+    card.innerHTML = `
+      <div class="code">${code}</div>
+      <div class="slots">${slots} roster slot${slots === 1 ? '' : 's'} filled</div>
+      <div class="gauge-row">
+        <div class="gauge" style="background:conic-gradient(${color} ${deg}deg, #223054 0deg)">
+          <div class="gauge-inner" style="color:${color}">${Math.round(pct*100)}%</div>
+        </div>
+        <div class="cap-figures">
+          <div class="left" style="color:${color}">$${left}</div>
+          <div class="of">of $${TOTAL_BUDGET} left</div>
+        </div>
+      </div>`;
+    card.addEventListener('click', () => openTeamRosterModal(code));
+    capGrid.appendChild(card);
+  });
+
+  // Only show picks logged to team BY, most recent first
+  fillPickList(document.getElementById('logList'), 'BY');
+
+  // Keep an open team-roster modal in sync if a pick changes while it's open
+  if (teamRosterOverlay.classList.contains('open') && currentRosterTeam) {
+    fillPickList(rosterModalList, currentRosterTeam);
+  }
+}
+
+logBtn.addEventListener('click', () => {
+  const p = selectedPlayer;
+  const draftTeam = draftTeamSelect.value;
+  const amt = parseInt(amtInput.value, 10);
+
+  if (!p) {
+    formMsg.textContent = 'Pick a player from the suggestions list.';
+    formMsg.className = 'msg error';
+    return;
+  }
+  if (picks.some(pk => pk.player.toLowerCase() === p.name.toLowerCase())) {
+    formMsg.textContent = `${p.name} has already been drafted — pick blocked.`;
+    formMsg.className = 'msg error';
+    return;
+  }
+  if (!draftTeam) {
+    formMsg.textContent = 'Choose a draft team.';
+    formMsg.className = 'msg error';
+    return;
+  }
+  if (!amt || amt <= 0) {
+    formMsg.textContent = 'Enter a valid dollar amount.';
+    formMsg.className = 'msg error';
+    return;
+  }
+  const { left } = teamStats(draftTeam);
+  if (amt > left) {
+    formMsg.textContent = `${draftTeam} only has $${left} of cap left.`;
+    formMsg.className = 'msg error';
+    return;
+  }
+
+  picks.push({
+    player: p.name, nflTeam: p.team, bye: p.bye, pos: p.pos,
+    draftTeam: draftTeam, amt: amt
+  });
+
+  formMsg.textContent = `Logged ${p.name} to ${draftTeam} for $${amt}.`;
+  formMsg.className = 'msg ok';
+
+  playerInput.value = '';
+  clearAutoFields();
+  amtInput.value = '';
+  draftTeamSelect.value = '';
+
+  savePicks();
+  render();
+});
+
+undoBtn.addEventListener('click', () => {
+  if (picks.length === 0) return;
+  const removed = picks.pop();
+  formMsg.textContent = removed.player === 'Cap Penalty'
+    ? `Undid the $${removed.amt} cap penalty on ${removed.draftTeam}.`
+    : `Undid ${removed.player} from ${removed.draftTeam} ($${removed.amt}).`;
+  formMsg.className = 'msg ok';
+  savePicks();
+  render();
+});
+
+// ---------- Reset ----------
+const RESET_PIN = '1019'; // change this to whatever PIN you want to gate resets with
+
+const resetOverlay = document.getElementById('resetOverlay');
+const pinInput = document.getElementById('pinInput');
+const resetError = document.getElementById('resetError');
+const resetModalMsg = document.getElementById('resetModalMsg');
+const pinSubmitBtn = document.getElementById('pinSubmitBtn');
+const pinCancelBtn = document.getElementById('pinCancelBtn');
+
+function openResetModal() {
+  pinInput.value = '';
+  resetError.textContent = '';
+  resetModalMsg.textContent = 'Enter the 4-digit PIN to clear every logged pick and reset all team caps back to $200.';
+  pinSubmitBtn.textContent = 'Reset Draft';
+  resetOverlay.classList.add('open');
+  pinInput.focus();
+}
+
+function closeResetModal() {
+  resetOverlay.classList.remove('open');
+}
+
+document.getElementById('resetBtn').addEventListener('click', openResetModal);
+pinCancelBtn.addEventListener('click', closeResetModal);
+resetOverlay.addEventListener('click', (e) => { if (e.target === resetOverlay) closeResetModal(); });
+
+pinSubmitBtn.addEventListener('click', () => {
+  if (pinInput.value.trim() !== RESET_PIN) {
+    resetError.textContent = 'Incorrect PIN. Try again.';
+    pinInput.value = '';
+    pinInput.focus();
+    return;
+  }
+  picks = [];
+  savePicks();
+  render();
+  closeResetModal();
+});
+
+pinInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') pinSubmitBtn.click();
+  if (e.key === 'Escape') closeResetModal();
+});
+
+// ---------- Team roster modal (click a Cap Tracker card) ----------
+const teamRosterOverlay = document.getElementById('teamRosterOverlay');
+const rosterModalTitle = document.getElementById('rosterModalTitle');
+const rosterModalList = document.getElementById('rosterModalList');
+const rosterCloseBtn = document.getElementById('rosterCloseBtn');
+let currentRosterTeam = null;
+
+function openTeamRosterModal(code) {
+  currentRosterTeam = code;
+  rosterModalTitle.textContent = code + "'s Picks";
+  fillPickList(rosterModalList, code);
+  teamRosterOverlay.classList.add('open');
+}
+
+function closeTeamRosterModal() {
+  teamRosterOverlay.classList.remove('open');
+  currentRosterTeam = null;
+}
+
+rosterCloseBtn.addEventListener('click', closeTeamRosterModal);
+teamRosterOverlay.addEventListener('click', (e) => { if (e.target === teamRosterOverlay) closeTeamRosterModal(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeTeamRosterModal(); });
+
+render();
+</script>
+</body>
+</html>
