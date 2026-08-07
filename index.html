@@ -1232,16 +1232,19 @@ function render() {
   // Cap grid
   const capGrid = document.getElementById('capGrid');
   capGrid.innerHTML = '';
+  const MAX_ROSTER_SLOTS = 16;
   TEAMS.forEach(code => {
     const { left, slots } = teamStats(code);
     const pct = Math.max(0, left / TOTAL_BUDGET);
     const color = gaugeColor(pct);
     const deg = Math.round(pct * 360);
+    const slotsPct = Math.max(0, 1 - (slots / MAX_ROSTER_SLOTS));
+    const slotsColor = gaugeColor(slotsPct);
     const card = document.createElement('div');
     card.className = 'cap-card';
     card.innerHTML = `
       <div class="code">${code}</div>
-      <div class="slots" title="Roster slots filled"><svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M12 12c2.7 0 8 1.34 8 4v2H4v-2c0-2.66 5.3-4 8-4zm0-2a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>${slots}</div>
+      <div class="slots" title="Roster slots filled" style="color:${slotsColor}"><svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M12 12c2.7 0 8 1.34 8 4v2H4v-2c0-2.66 5.3-4 8-4zm0-2a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>${slots}</div>
       <div class="gauge-row">
         <div class="gauge" style="background:conic-gradient(${color} ${deg}deg, #223054 0deg)">
           <div class="gauge-inner" style="color:${color}">${Math.round(pct*100)}%</div>
