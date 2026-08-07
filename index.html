@@ -301,6 +301,32 @@
   .card .sub{
     font-size:12.5px; color:var(--muted); margin:0 0 18px;
   }
+  .card-header-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .card-header-row h2{margin-bottom:0;}
+  .only-available-toggle{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    color:var(--muted);
+    cursor:pointer;
+    white-space:nowrap;
+    user-select:none;
+  }
+  .only-available-toggle input{
+    width:14px; height:14px;
+    accent-color:var(--teal);
+    cursor:pointer;
+  }
+  .only-available-toggle:has(input:checked){color:var(--teal);}
 
   /* ---------- Form ---------- */
   .field-row{
@@ -628,26 +654,19 @@
 
     <!-- RIGHT: entry form + BY's picks -->
     <div class="card">
-      <h2>Nominate a Pick</h2>
+      <div class="card-header-row">
+        <h2>Nominate a Pick</h2>
+        <label class="only-available-toggle">
+          <input type="checkbox" id="onlyAvailableToggle">
+          Only Available
+        </label>
+      </div>
       <p class="sub">Select a player, choose the winning team, log the price.</p>
 
       <div class="field" style="position:relative;">
         <label for="playerInput">Player</label>
         <input id="playerInput" name="player-search" type="search" placeholder="Search the player pool…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
         <div id="suggestBox" class="suggest-box"></div>
-      </div>
-
-      <div class="field" style="margin-top:12px;">
-        <label for="posFilter">Filter by Position</label>
-        <select id="posFilter">
-          <option value="">All Positions</option>
-          <option value="QB">QB</option>
-          <option value="RB">RB</option>
-          <option value="WR">WR</option>
-          <option value="TE">TE</option>
-          <option value="K">K</option>
-          <option value="D">D</option>
-        </select>
       </div>
 
       <div class="field-row triple" style="margin-top:12px;">
@@ -868,7 +887,7 @@ TEAMS.forEach(t => {
 });
 
 const playerInput = document.getElementById('playerInput');
-const posFilterSelect = document.getElementById('posFilter');
+const onlyAvailableToggle = document.getElementById('onlyAvailableToggle');
 const suggestBox = document.getElementById('suggestBox');
 const nflTeamField = document.getElementById('nflTeam');
 const byeField = document.getElementById('byeWeek');
@@ -925,16 +944,13 @@ function closeSuggestions() {
   suggestBox.innerHTML = '';
 }
 
-// Search only the Player-name field (Rosters column 1), never team/pos/bye —
-// narrowed first by the position filter, if one is selected.
+// Search only the Player-name field (Rosters column 1), never team/pos/bye.
 function searchPlayers(query) {
   const q = query.trim().toLowerCase();
-  const posVal = posFilterSelect.value;
-  let pool = posVal ? PLAYERS.filter(p => p.pos === posVal) : PLAYERS;
-  if (!q) {
-    // no name typed yet: with a position picked, browse that position A-Z;
-    // with no position picked, wait for the person to start typing a name.
-    return posVal ? pool.slice().sort((a, b) => a.name.localeCompare(b.name)).slice(0, 8) : [];
+  if (!q) return [];
+  let pool = PLAYERS;
+  if (onlyAvailableToggle.checked) {
+    pool = pool.filter(p => !isDrafted(p.name));
   }
   return pool.filter(p => p.name.toLowerCase().includes(q)).slice(0, 8);
 }
@@ -942,7 +958,7 @@ function searchPlayers(query) {
 function renderSuggestions(matches) {
   suggestBox.innerHTML = '';
   if (matches.length === 0) {
-    suggestBox.innerHTML = '<div class="suggest-empty">No player matches that search.</div>';
+    suggestBox.innerHTML = '<div class="suggest-empty">No player matches that name.</div>';
     suggestBox.classList.add('open');
     return;
   }
@@ -960,18 +976,17 @@ function renderSuggestions(matches) {
 
 playerInput.addEventListener('input', () => {
   clearAutoFields();
-  renderSuggestions(searchPlayers(playerInput.value));
+  const matches = searchPlayers(playerInput.value);
+  if (playerInput.value.trim() === '') { closeSuggestions(); return; }
+  renderSuggestions(matches);
 });
 
 playerInput.addEventListener('focus', () => {
-  renderSuggestions(searchPlayers(playerInput.value));
+  if (playerInput.value.trim() !== '') renderSuggestions(searchPlayers(playerInput.value));
 });
 
-posFilterSelect.addEventListener('change', () => {
-  clearAutoFields();
-  playerInput.value = '';
-  renderSuggestions(searchPlayers(''));
-  if (posFilterSelect.value) playerInput.focus();
+onlyAvailableToggle.addEventListener('change', () => {
+  if (playerInput.value.trim() !== '') renderSuggestions(searchPlayers(playerInput.value));
 });
 
 document.addEventListener('click', (e) => {
