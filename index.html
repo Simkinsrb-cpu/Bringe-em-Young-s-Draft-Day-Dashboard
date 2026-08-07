@@ -678,9 +678,10 @@
           <label>Bye</label>
           <input id="byeWeek" readonly placeholder="—">
         </div>
-        <div class="field">
+        <div class="field" style="position:relative;">
           <label>Pos</label>
-          <input id="posField" readonly placeholder="—">
+          <input id="posField" placeholder="Any" autocomplete="off">
+          <div id="posSuggestBox" class="suggest-box"></div>
         </div>
       </div>
 
@@ -892,12 +893,15 @@ const suggestBox = document.getElementById('suggestBox');
 const nflTeamField = document.getElementById('nflTeam');
 const byeField = document.getElementById('byeWeek');
 const posField = document.getElementById('posField');
+const posSuggestBox = document.getElementById('posSuggestBox');
 const amtInput = document.getElementById('amtInput');
 const formMsg = document.getElementById('formMsg');
 const logBtn = document.getElementById('logBtn');
 const undoBtn = document.getElementById('undoBtn');
 
 let selectedPlayer = null; // the confirmed match, set only when a suggestion is chosen
+let posFilterValue = ''; // active Pos filter, e.g. "WR" — narrows the player search
+const POS_OPTIONS = ['QB', 'RB', 'WR', 'TE', 'K', 'D'];
 
 function isDrafted(name) {
   return picks.find(pk => pk.player.toLowerCase() === name.toLowerCase()) || null;
@@ -906,7 +910,6 @@ function isDrafted(name) {
 function clearAutoFields() {
   nflTeamField.value = '';
   byeField.value = '';
-  posField.value = '';
   selectedPlayer = null;
   nflTeamField.classList.remove('drafted-field');
   byeField.classList.remove('drafted-field');
@@ -919,8 +922,10 @@ function applyPlayer(p) {
   nflTeamField.value = p.team;
   byeField.value = p.bye;
   posField.value = p.pos;
+  posFilterValue = p.pos;
   selectedPlayer = p;
   closeSuggestions();
+  closePosSuggestions();
 
   const draftedPick = isDrafted(p.name);
   if (draftedPick) {
@@ -947,12 +952,54 @@ function closeSuggestions() {
 // Search only the Player-name field (Rosters column 1), never team/pos/bye.
 function searchPlayers(query) {
   const q = query.trim().toLowerCase();
-  if (!q) return [];
   let pool = PLAYERS;
   if (onlyAvailableToggle.checked) {
     pool = pool.filter(p => !isDrafted(p.name));
   }
+  if (posFilterValue) {
+    pool = pool.filter(p => p.pos === posFilterValue);
+  }
+  if (!q) {
+    // no name typed: with a Pos filter active, browse that position A-Z instead of showing nothing
+    return posFilterValue ? pool.slice().sort((a, b) => a.name.localeCompare(b.name)).slice(0, 8) : [];
+  }
   return pool.filter(p => p.name.toLowerCase().includes(q)).slice(0, 8);
+}
+
+function searchPositions(query) {
+  const q = query.trim().toUpperCase();
+  if (!q) return POS_OPTIONS;
+  return POS_OPTIONS.filter(p => p.includes(q));
+}
+
+function closePosSuggestions() {
+  posSuggestBox.classList.remove('open');
+  posSuggestBox.innerHTML = '';
+}
+
+function renderPosSuggestions(matches) {
+  posSuggestBox.innerHTML = '';
+  if (matches.length === 0) {
+    posSuggestBox.innerHTML = '<div class="suggest-empty">No matching position.</div>';
+    posSuggestBox.classList.add('open');
+    return;
+  }
+  matches.forEach(pos => {
+    const item = document.createElement('div');
+    item.className = 'suggest-item';
+    item.innerHTML = `<span class="sname">${pos}</span>`;
+    item.addEventListener('mousedown', (e) => { e.preventDefault(); applyPosFilter(pos); });
+    posSuggestBox.appendChild(item);
+  });
+  posSuggestBox.classList.add('open');
+}
+
+function applyPosFilter(pos) {
+  clearAutoFields();
+  posField.value = pos;
+  posFilterValue = pos;
+  closePosSuggestions();
+  renderSuggestions(searchPlayers(playerInput.value));
 }
 
 function renderSuggestions(matches) {
@@ -976,21 +1023,34 @@ function renderSuggestions(matches) {
 
 playerInput.addEventListener('input', () => {
   clearAutoFields();
-  const matches = searchPlayers(playerInput.value);
-  if (playerInput.value.trim() === '') { closeSuggestions(); return; }
-  renderSuggestions(matches);
+  if (playerInput.value.trim() === '' && !posFilterValue) { closeSuggestions(); return; }
+  renderSuggestions(searchPlayers(playerInput.value));
 });
 
 playerInput.addEventListener('focus', () => {
-  if (playerInput.value.trim() !== '') renderSuggestions(searchPlayers(playerInput.value));
+  if (playerInput.value.trim() !== '' || posFilterValue) renderSuggestions(searchPlayers(playerInput.value));
 });
 
 onlyAvailableToggle.addEventListener('change', () => {
-  if (playerInput.value.trim() !== '') renderSuggestions(searchPlayers(playerInput.value));
+  if (playerInput.value.trim() !== '' || posFilterValue) renderSuggestions(searchPlayers(playerInput.value));
+});
+
+posField.addEventListener('input', () => {
+  clearAutoFields();
+  posFilterValue = posField.value.trim().toUpperCase();
+  renderPosSuggestions(searchPositions(posField.value));
+  renderSuggestions(searchPlayers(playerInput.value));
+});
+
+posField.addEventListener('focus', () => {
+  renderPosSuggestions(searchPositions(posField.value));
 });
 
 document.addEventListener('click', (e) => {
-  if (!e.target.closest('.field')) closeSuggestions();
+  if (!e.target.closest('.field')) {
+    closeSuggestions();
+    closePosSuggestions();
+  }
 });
 
 function teamStats(code) {
