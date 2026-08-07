@@ -203,6 +203,11 @@
     margin-bottom:12px;
   }
   .roster-modal-head h3{margin:0; color:var(--gold);}
+  .roster-modal-title-group{display:flex; align-items:baseline; gap:10px;}
+  .roster-modal-cap{
+    font-family:'JetBrains Mono',monospace;
+    font-size:14px; font-weight:700;
+  }
   .roster-close{
     background:transparent; border:none; color:var(--muted);
     font-size:22px; line-height:1; cursor:pointer; padding:0 4px;
@@ -783,7 +788,10 @@
 <div id="teamRosterOverlay" class="modal-overlay">
   <div class="modal-card roster-modal">
     <div class="roster-modal-head">
-      <h3 id="rosterModalTitle">TEAM</h3>
+      <div class="roster-modal-title-group">
+        <h3 id="rosterModalTitle">TEAM</h3>
+        <span id="rosterModalCap" class="roster-modal-cap"></span>
+      </div>
       <button id="rosterCloseBtn" class="roster-close" title="Close">&times;</button>
     </div>
     <div class="pick-row-header">
@@ -1235,6 +1243,7 @@ function render() {
 
   // Keep an open team-roster modal in sync if a pick changes while it's open
   if (teamRosterOverlay.classList.contains('open') && currentRosterTeam) {
+    updateRosterModalCap(currentRosterTeam);
     fillPickList(rosterModalList, currentRosterTeam);
   }
 }
@@ -1347,6 +1356,7 @@ pinInput.addEventListener('keydown', (e) => {
 // ---------- Team roster modal (click a Cap Tracker card) ----------
 const teamRosterOverlay = document.getElementById('teamRosterOverlay');
 const rosterModalTitle = document.getElementById('rosterModalTitle');
+const rosterModalCap = document.getElementById('rosterModalCap');
 const rosterModalList = document.getElementById('rosterModalList');
 const rosterCloseBtn = document.getElementById('rosterCloseBtn');
 let currentRosterTeam = null;
@@ -1354,8 +1364,16 @@ let currentRosterTeam = null;
 function openTeamRosterModal(code) {
   currentRosterTeam = code;
   rosterModalTitle.textContent = code + "'s Picks";
+  updateRosterModalCap(code);
   fillPickList(rosterModalList, code);
   teamRosterOverlay.classList.add('open');
+}
+
+function updateRosterModalCap(code) {
+  const { left } = teamStats(code);
+  const pct = left / TOTAL_BUDGET;
+  rosterModalCap.textContent = `$${left} left`;
+  rosterModalCap.style.color = gaugeColor(pct);
 }
 
 function closeTeamRosterModal() {
