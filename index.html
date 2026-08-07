@@ -616,31 +616,34 @@
     position:relative;
     overflow:hidden;
   }
+  .card-top-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+  }
   .cap-card .code{
     font-family:'Oswald',sans-serif;
     font-size:21px; font-weight:600; letter-spacing:.03em;
   }
   .cap-card .slots{
-    display:flex; align-items:center; gap:7px;
+    display:flex; align-items:center; gap:8px;
     font-family:'JetBrains Mono',monospace;
-    font-size:21px; font-weight:700; color:var(--gold); margin-top:5px;
+    font-size:26px; font-weight:700; color:var(--gold);
     cursor:default;
   }
-  .cap-card .slots svg{flex:0 0 auto; width:22px; height:22px;}
+  .cap-card .slots svg{flex:0 0 auto; width:27px; height:27px;}
   .gauge-row{
-    display:flex; align-items:center; gap:16px; margin-top:14px;
+    display:flex; align-items:center; gap:18px; margin-top:16px;
   }
   .gauge{
-    width:64px; height:64px; border-radius:50%;
+    width:104px; height:104px; border-radius:50%;
     display:flex; align-items:center; justify-content:center;
     flex-shrink:0;
   }
   .gauge-inner{
-    width:48px; height:48px; border-radius:50%;
+    width:80px; height:80px; border-radius:50%;
     background:#0E1526;
     display:flex; align-items:center; justify-content:center;
     font-family:'JetBrains Mono',monospace;
-    font-size:13px; font-weight:700;
+    font-size:20px; font-weight:700;
   }
   .cap-figures .left{
     font-family:'JetBrains Mono',monospace;
@@ -1243,8 +1246,10 @@ function render() {
     const card = document.createElement('div');
     card.className = 'cap-card';
     card.innerHTML = `
-      <div class="code">${code}</div>
-      <div class="slots" title="Roster slots filled" style="color:${slotsColor}"><svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M12 12c2.7 0 8 1.34 8 4v2H4v-2c0-2.66 5.3-4 8-4zm0-2a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>${slots}</div>
+      <div class="card-top-row">
+        <div class="code">${code}</div>
+        <div class="slots" title="Roster slots filled" style="color:${slotsColor}"><svg viewBox="0 0 24 24" fill="currentColor" width="27" height="27"><path d="M12 12c2.7 0 8 1.34 8 4v2H4v-2c0-2.66 5.3-4 8-4zm0-2a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>${slots}</div>
+      </div>
       <div class="gauge-row">
         <div class="gauge" style="background:conic-gradient(${color} ${deg}deg, #223054 0deg)">
           <div class="gauge-inner" style="color:${color}">${Math.round(pct*100)}%</div>
