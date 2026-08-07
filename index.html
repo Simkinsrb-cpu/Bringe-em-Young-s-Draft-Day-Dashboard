@@ -1098,9 +1098,19 @@ function findByeConflicts(teamCode) {
   return counts;
 }
 
+// QB, RB, WR, TE (not explicitly listed — placed after WR by convention), D, K, ?, C, then anything else.
+const POS_SORT_ORDER = { 'QB': 1, 'RB': 2, 'WR': 3, 'TE': 4, 'D': 5, 'K': 6, '?': 7, 'C': 8 };
+function posSortRank(pos) {
+  return POS_SORT_ORDER[pos] !== undefined ? POS_SORT_ORDER[pos] : 99;
+}
+
 function fillPickList(container, teamCode) {
   container.innerHTML = '';
-  const visible = picks.filter(pk => pk.draftTeam === teamCode).slice().reverse();
+  const visible = picks.filter(pk => pk.draftTeam === teamCode).slice().sort((a, b) => {
+    const rankDiff = posSortRank(a.pos) - posSortRank(b.pos);
+    if (rankDiff !== 0) return rankDiff;
+    return a.player.localeCompare(b.player);
+  });
   if (visible.length === 0) {
     container.innerHTML = `<div class="empty-note">No ${teamCode} picks logged yet.</div>`;
   } else {
