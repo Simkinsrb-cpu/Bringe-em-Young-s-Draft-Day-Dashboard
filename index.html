@@ -15,6 +15,7 @@
     --gold:#F2B134;
     --gold-dark:#C98A16;
     --teal:#2DD4BF;
+    --blue:#38BDF8;
     --red:#FB7185;
     --text:#EDF1F9;
     --muted:#8A94AC;
@@ -507,9 +508,16 @@
   .pick-row .pname{flex:1; font-weight:600;}
   .pick-row .pbye{
     font-family:'JetBrains Mono',monospace;
-    font-size:11px; color:var(--muted);
-    background:var(--panel-2); padding:3px 8px; border-radius:7px;
-    border:1px solid var(--border);
+    font-size:11px; font-weight:700; color:var(--blue);
+    background:rgba(56,189,248,.12); padding:3px 8px; border-radius:7px;
+    border:1.5px solid var(--blue);
+    box-shadow:0 0 8px -2px rgba(56,189,248,.55);
+  }
+  .pick-row .pbye.conflict{
+    color:var(--red);
+    background:rgba(251,113,133,.14);
+    border-color:var(--red);
+    box-shadow:0 0 8px -2px rgba(251,113,133,.6);
   }
   .pick-row .pamt{
     font-family:'JetBrains Mono',monospace;
@@ -957,13 +965,13 @@ function gaugeColor(pct) {
   return '#FB7185';
 }
 
-function buildPickRow(pk) {
+function buildPickRow(pk, hasByeConflict) {
   const row = document.createElement('div');
   row.className = 'pick-row';
   row.innerHTML = `
     <span class="pos-chip">${pk.pos || '—'}</span>
     <span class="pname">${pk.player}</span>
-    <span class="pbye">${pk.bye != null ? pk.bye : '—'}</span>
+    <span class="pbye${hasByeConflict ? ' conflict' : ''}" title="${hasByeConflict ? 'Bye-week clash with another ' + pk.pos + ' on this roster' : ''}">${pk.bye != null ? pk.bye : '—'}</span>
     <span class="pamt">$${pk.amt}</span>
     <button class="del-pick-btn" title="Remove ${pk.player} from this roster">Delete</button>`;
   row.querySelector('.del-pick-btn').addEventListener('click', () => {
@@ -975,13 +983,30 @@ function buildPickRow(pk) {
   return row;
 }
 
+// Flags any player whose position + bye week matches another player at the
+// same position on the same team — e.g. two rostered WRs both on a Bye 11.
+function findByeConflicts(teamCode) {
+  const counts = {};
+  picks.filter(pk => pk.draftTeam === teamCode && pk.pos && pk.bye != null)
+    .forEach(pk => {
+      const key = pk.pos + '|' + pk.bye;
+      counts[key] = (counts[key] || 0) + 1;
+    });
+  return counts;
+}
+
 function fillPickList(container, teamCode) {
   container.innerHTML = '';
   const visible = picks.filter(pk => pk.draftTeam === teamCode).slice().reverse();
   if (visible.length === 0) {
     container.innerHTML = `<div class="empty-note">No ${teamCode} picks logged yet.</div>`;
   } else {
-    visible.forEach(pk => container.appendChild(buildPickRow(pk)));
+    const conflictCounts = findByeConflicts(teamCode);
+    visible.forEach(pk => {
+      const key = pk.pos + '|' + pk.bye;
+      const hasByeConflict = pk.pos && pk.bye != null && conflictCounts[key] >= 2;
+      container.appendChild(buildPickRow(pk, hasByeConflict));
+    });
   }
 }
 
