@@ -324,6 +324,15 @@
     gap:12px;
   }
   .card-header-row h2{margin-bottom:0;}
+  .cap-total-badge{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px; font-weight:700; letter-spacing:.04em;
+    color:var(--teal);
+    background:rgba(45,212,191,.12);
+    border:1px solid rgba(45,212,191,.35);
+    padding:4px 10px;
+    border-radius:999px;
+  }
   .only-available-toggle{
     display:flex;
     align-items:center;
@@ -694,7 +703,10 @@
 
     <!-- LEFT: cap tracker -->
     <div class="card">
-      <h2>Cap Tracker</h2>
+      <div class="card-header-row">
+        <h2>Cap Tracker</h2>
+        <span class="cap-total-badge">$200 / team</span>
+      </div>
       <p class="sub">Live per-team budget, updates the instant a pick is logged.</p>
       <div class="cap-grid" id="capGrid"></div>
     </div>
@@ -1231,7 +1243,6 @@ function render() {
         </div>
         <div class="cap-figures">
           <div class="left" style="color:${color}">$${left}</div>
-          <div class="of">of $${TOTAL_BUDGET} left</div>
         </div>
       </div>`;
     card.addEventListener('click', () => openTeamRosterModal(code));
@@ -1391,26 +1402,21 @@ const posBannerToggle = document.getElementById('posBannerToggle');
 
 function buildTicker() {
   const track = document.getElementById('tickerTrack');
-  let chunks;
+  const perPos = posBannerToggle.checked ? TOP_N_BY_POS : { QB: 1, RB: 1, WR: 1, TE: 1 };
 
-  if (posBannerToggle.checked) {
-    // Best-available top N per position, QB then RB then WR then TE — recomputed
-    // live off whichever players are still undrafted.
-    chunks = [];
-    ['QB', 'RB', 'WR', 'TE'].forEach(pos => {
-      const n = TOP_N_BY_POS[pos];
-      const available = POS_RANKED[pos].filter(p => !isDrafted(p.name)).slice(0, n);
-      available.forEach((p, idx) => {
-        chunks.push(`<span class="ticker-item"><span class="tpos">${pos}${idx + 1}</span><span class="tname">${p.name}</span><span class="trank">(${p.rank})</span></span>`);
-      });
+  // Best-available top N per position, QB then RB then WR then TE — recomputed
+  // live off whichever players are still undrafted, so a drafted leader is
+  // immediately replaced by the next-best available player at that position.
+  let chunks = [];
+  ['QB', 'RB', 'WR', 'TE'].forEach(pos => {
+    const n = perPos[pos];
+    const available = POS_RANKED[pos].filter(p => !isDrafted(p.name)).slice(0, n);
+    available.forEach((p, idx) => {
+      chunks.push(`<span class="ticker-item"><span class="tpos">${pos}${idx + 1}</span><span class="tname">${p.name}</span><span class="trank">(${p.rank})</span></span>`);
     });
-    if (chunks.length === 0) {
-      chunks = ['<span class="ticker-item"><span class="tname">Every top QB/RB/WR/TE has been drafted.</span></span>'];
-    }
-  } else {
-    chunks = POSITION_LEADERS.map(p =>
-      `<span class="ticker-item"><span class="tpos">${p.pos}1</span><span class="tname">${p.name}</span><span class="trank">(${p.rank})</span></span>`
-    );
+  });
+  if (chunks.length === 0) {
+    chunks = ['<span class="ticker-item"><span class="tname">Every top QB/RB/WR/TE has been drafted.</span></span>'];
   }
 
   const itemsHtml = chunks.join('<span class="ticker-item" aria-hidden="true">&#8226;</span>');
