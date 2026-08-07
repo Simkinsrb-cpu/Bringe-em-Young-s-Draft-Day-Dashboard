@@ -664,6 +664,40 @@
     font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
     margin-bottom:6px;
   }
+
+  .team-rankings-panel{
+    position:fixed;
+    bottom:18px; right:18px;
+    width:190px;
+    background:linear-gradient(160deg,#233250,#1a2740 55%,#152034);
+    border:1px solid rgba(242,177,52,.4);
+    border-radius:var(--radius-md);
+    padding:14px;
+    box-shadow:0 20px 44px -12px rgba(0,0,0,.6);
+    z-index:60;
+  }
+  .rankings-title{
+    font-family:'Oswald',sans-serif;
+    font-size:12.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+    color:var(--gold);
+  }
+  .rankings-sub{
+    font-size:9.5px; color:var(--muted); margin-bottom:8px;
+  }
+  .rank-row{
+    display:flex; align-items:center; gap:8px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    padding:3px 0;
+  }
+  .rank-num{
+    width:16px; color:var(--muted); font-weight:700;
+  }
+  .rank-team{flex:1; font-weight:700; color:var(--text);}
+  .rank-avg{color:var(--teal); font-weight:700;}
+  @media (max-width:820px){
+    .team-rankings-panel{position:static; width:100%; margin-top:16px;}
+  }
 </style>
 </head>
 <body>
@@ -823,6 +857,12 @@
     </div>
     <div class="log-list" id="rosterModalList"></div>
   </div>
+</div>
+
+<div class="team-rankings-panel">
+  <div class="rankings-title">Team Power Rankings</div>
+  <div class="rankings-sub">Avg QB/RB/WR/TE rank</div>
+  <div id="teamRankingsList"></div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -1231,6 +1271,7 @@ function fillPickList(container, teamCode) {
 function render() {
   undoBtn.disabled = picks.length === 0;
   buildTicker();
+  renderTeamRankings();
 
   // Cap grid
   const capGrid = document.getElementById('capGrid');
@@ -1411,6 +1452,50 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeTeamR
 
 const POS_RANKED = {"QB": [{"name": "Josh Allen", "rank": 1}, {"name": "Lamar Jackson", "rank": 2}, {"name": "Jalen Hurts", "rank": 3}, {"name": "Drake Maye", "rank": 4}, {"name": "Jayden Daniels", "rank": 5}, {"name": "Joe Burrow", "rank": 6}, {"name": "Jaxson Dart", "rank": 7}, {"name": "Bo Nix", "rank": 8}, {"name": "Matthew Stafford", "rank": 9}, {"name": "Brock Purdy", "rank": 10}, {"name": "Patrick Mahomes", "rank": 11}, {"name": "Trevor Lawrence", "rank": 12}, {"name": "Dak Prescott", "rank": 13}, {"name": "Justin Herbert", "rank": 14}, {"name": "Caleb Williams", "rank": 15}, {"name": "Jared Goff", "rank": 16}, {"name": "Daniel Jones", "rank": 17}, {"name": "Tyler Shough", "rank": 18}, {"name": "Baker Mayfield", "rank": 19}, {"name": "Jordan Love", "rank": 20}, {"name": "Kyler Murray", "rank": 21}, {"name": "C.J. Stroud", "rank": 22}, {"name": "Sam Darnold", "rank": 23}, {"name": "Bryce Young", "rank": 24}, {"name": "Malik Willis", "rank": 25}, {"name": "Geno Smith", "rank": 26}, {"name": "Cameron Ward", "rank": 27}, {"name": "Aaron Rodgers", "rank": 28}, {"name": "Jacoby Brissett", "rank": 29}, {"name": "Fernando Mendoza", "rank": 30}, {"name": "Deshaun Watson", "rank": 31}, {"name": "Tua Tagovailoa", "rank": 32}, {"name": "Michael Penix Jr.", "rank": 33}, {"name": "Shedeur Sanders", "rank": 34}, {"name": "Kirk Cousins", "rank": 35}, {"name": "J.J. McCarthy", "rank": 36}, {"name": "Carson Beck", "rank": 37}, {"name": "Justin Fields", "rank": 38}, {"name": "Joe Flacco", "rank": 39}, {"name": "Jarrett Stidham", "rank": 40}, {"name": "Nick Mullens", "rank": 41}, {"name": "Jake Browning", "rank": 42}, {"name": "Tommy DeVito", "rank": 43}, {"name": "Marcus Mariota", "rank": 44}, {"name": "Tyson Bagent", "rank": 45}, {"name": "Ty Simpson", "rank": 46}, {"name": "Sam Howell", "rank": 47}, {"name": "Tanner McKee", "rank": 48}, {"name": "Drew Allar", "rank": 49}, {"name": "Teddy Bridgewater", "rank": 50}, {"name": "Trey Lance", "rank": 51}, {"name": "Riley Leonard", "rank": 52}, {"name": "Tyrod Taylor", "rank": 53}, {"name": "Kenny Pickett", "rank": 54}, {"name": "Spencer Rattler", "rank": 55}, {"name": "Jameis Winston", "rank": 56}, {"name": "Tyler Huntley", "rank": 57}, {"name": "Mac Jones", "rank": 58}, {"name": "Davis Mills", "rank": 59}, {"name": "Cade Klubnik", "rank": 60}, {"name": "Kyle Allen", "rank": 61}, {"name": "Drew Lock", "rank": 62}, {"name": "Mitchell Trubisky", "rank": 63}, {"name": "Quinn Ewers", "rank": 64}, {"name": "Gardner Minshew", "rank": 65}], "RB": [{"name": "Jahmyr Gibbs", "rank": 1}, {"name": "Bijan Robinson", "rank": 2}, {"name": "Christian McCaffrey", "rank": 3}, {"name": "Jonathan Taylor", "rank": 4}, {"name": "De'Von Achane", "rank": 5}, {"name": "Ashton Jeanty", "rank": 6}, {"name": "Omarion Hampton", "rank": 7}, {"name": "James Cook", "rank": 8}, {"name": "Jeremiyah Love", "rank": 9}, {"name": "Derrick Henry", "rank": 10}, {"name": "Saquon Barkley", "rank": 11}, {"name": "Josh Jacobs", "rank": 12}, {"name": "Breece Hall", "rank": 13}, {"name": "Ken Walker III", "rank": 14}, {"name": "Chase Brown", "rank": 15}, {"name": "Javonte Williams", "rank": 16}, {"name": "Cam Skattebo", "rank": 17}, {"name": "Travis Etienne", "rank": 18}, {"name": "Kyren Williams", "rank": 19}, {"name": "Quinshon Judkins", "rank": 20}, {"name": "D'Andre Swift", "rank": 21}, {"name": "TreVeyon Henderson", "rank": 22}, {"name": "Bucky Irving", "rank": 23}, {"name": "Bhayshul Tuten", "rank": 24}, {"name": "Jadarian Price", "rank": 25}, {"name": "David Montgomery", "rank": 26}, {"name": "Jaylen Warren", "rank": 27}, {"name": "Rhamondre Stevenson", "rank": 28}, {"name": "Tony Pollard", "rank": 29}, {"name": "Aaron Jones", "rank": 30}, {"name": "Rico Dowdle", "rank": 31}, {"name": "Chuba Hubbard", "rank": 32}, {"name": "Kenneth Gainwell", "rank": 33}, {"name": "Kyle Monangai", "rank": 34}, {"name": "Rachaad White", "rank": 35}, {"name": "J.K. Dobbins", "rank": 36}, {"name": "RJ Harvey", "rank": 37}, {"name": "Jonathon Brooks", "rank": 38}, {"name": "Blake Corum", "rank": 39}, {"name": "Jacory Croskey-Merritt", "rank": 40}, {"name": "Tyjae Spears", "rank": 41}, {"name": "Zach Charbonnet", "rank": 42}, {"name": "Jordan Mason", "rank": 43}, {"name": "Woody Marks", "rank": 44}, {"name": "Alvin Kamara", "rank": 45}, {"name": "Isiah Pacheco", "rank": 46}, {"name": "Justice Hill", "rank": 47}, {"name": "Samaje Perine", "rank": 48}, {"name": "Brian Robinson Jr.", "rank": 49}, {"name": "Tyler Allgeier", "rank": 50}, {"name": "Tyrone Tracy Jr.", "rank": 51}, {"name": "Dylan Sampson", "rank": 52}, {"name": "Ty Johnson", "rank": 53}, {"name": "Braelon Allen", "rank": 54}, {"name": "Chris Rodriguez", "rank": 55}, {"name": "Mike Washington Jr.", "rank": 56}, {"name": "MarShawn Lloyd", "rank": 57}, {"name": "Tank Bigsby", "rank": 58}, {"name": "Keaton Mitchell", "rank": 59}, {"name": "Emari Demercado", "rank": 60}, {"name": "Jordan James", "rank": 61}, {"name": "Isaiah Davis", "rank": 62}, {"name": "Jaydon Blue", "rank": 63}, {"name": "LeQuint Allen", "rank": 64}, {"name": "Emmett Johnson", "rank": 65}, {"name": "Kyle Juszczyk", "rank": 66}, {"name": "Chris Brooks", "rank": 67}, {"name": "Jaylen Wright", "rank": 68}, {"name": "George Holani", "rank": 69}, {"name": "Jonah Coleman", "rank": 70}, {"name": "Kimani Vidal", "rank": 71}, {"name": "Ray Davis", "rank": 72}, {"name": "Sean Tucker", "rank": 73}, {"name": "DJ Giddens", "rank": 74}, {"name": "Malik Davis", "rank": 75}, {"name": "Ollie Gordon II", "rank": 76}, {"name": "Kaelon Black", "rank": 77}, {"name": "Will Shipley", "rank": 78}, {"name": "Adam Randall", "rank": 79}, {"name": "Hunter Luepke", "rank": 80}, {"name": "Demond Claiborne", "rank": 81}, {"name": "Devin Singletary", "rank": 82}, {"name": "Nicholas Singleton", "rank": 83}, {"name": "Tyler Badie", "rank": 84}, {"name": "Tahj Brooks", "rank": 85}, {"name": "Trevor Etienne", "rank": 86}, {"name": "Alec Ingold", "rank": 87}, {"name": "Kaytron Allen", "rank": 88}, {"name": "Seth McGowan", "rank": 89}, {"name": "Adam Prentice", "rank": 90}, {"name": "Connor Heyward", "rank": 91}, {"name": "Michael Burton", "rank": 92}, {"name": "Emanuel Wilson", "rank": 93}, {"name": "Max Bredeson", "rank": 94}, {"name": "Andrew Beck", "rank": 95}, {"name": "Riley Nowakowski", "rank": 96}, {"name": "Reggie Gilliam", "rank": 97}, {"name": "Patrick Ricard", "rank": 98}, {"name": "Kendre Miller", "rank": 99}, {"name": "Jawhar Jordan", "rank": 100}, {"name": "Kaleb Johnson", "rank": 101}, {"name": "British Brooks", "rank": 102}, {"name": "Kene Nwangwu", "rank": 103}, {"name": "Isaac Guerendo", "rank": 104}, {"name": "Brashard Smith", "rank": 105}, {"name": "Bam Knight", "rank": 106}, {"name": "Dylan Laube", "rank": 107}, {"name": "Rasheen Ali", "rank": 108}, {"name": "Jacob Saylors", "rank": 109}, {"name": "DeeJay Dallas", "rank": 110}, {"name": "Josh Williams", "rank": 111}], "WR": [{"name": "Puka Nacua", "rank": 1}, {"name": "Ja'Marr Chase", "rank": 2}, {"name": "Jaxon Smith-Njigba", "rank": 3}, {"name": "Amon-Ra St. Brown", "rank": 4}, {"name": "CeeDee Lamb", "rank": 5}, {"name": "Justin Jefferson", "rank": 6}, {"name": "Rashee Rice", "rank": 7}, {"name": "Drake London", "rank": 8}, {"name": "Nico Collins", "rank": 9}, {"name": "A.J. Brown", "rank": 10}, {"name": "Garrett Wilson", "rank": 11}, {"name": "Chris Olave", "rank": 12}, {"name": "Tetairoa McMillan", "rank": 13}, {"name": "George Pickens", "rank": 14}, {"name": "Zay Flowers", "rank": 15}, {"name": "DeVonta Smith", "rank": 16}, {"name": "Davante Adams", "rank": 17}, {"name": "Malik Nabers", "rank": 18}, {"name": "Emeka Egbuka", "rank": 19}, {"name": "Ladd McConkey", "rank": 20}, {"name": "Tee Higgins", "rank": 21}, {"name": "Terry McLaurin", "rank": 22}, {"name": "Jaylen Waddle", "rank": 23}, {"name": "Rome Odunze", "rank": 24}, {"name": "Carnell Tate", "rank": 25}, {"name": "DJ Moore", "rank": 26}, {"name": "Jameson Williams", "rank": 27}, {"name": "Luther Burden III", "rank": 28}, {"name": "Courtland Sutton", "rank": 29}, {"name": "Alec Pierce", "rank": 30}, {"name": "Michael Pittman Jr.", "rank": 31}, {"name": "DK Metcalf", "rank": 32}, {"name": "Marvin Harrison Jr.", "rank": 33}, {"name": "Jordyn Tyson", "rank": 34}, {"name": "Parker Washington", "rank": 35}, {"name": "Christian Watson", "rank": 36}, {"name": "Matthew Golden", "rank": 37}, {"name": "Mike Evans", "rank": 38}, {"name": "Jakobi Meyers", "rank": 39}, {"name": "Michael Wilson", "rank": 40}, {"name": "Brian Thomas Jr.", "rank": 41}, {"name": "Wan'Dale Robinson", "rank": 42}, {"name": "Josh Downs", "rank": 43}, {"name": "Makai Lemon", "rank": 44}, {"name": "Xavier Worthy", "rank": 45}, {"name": "Deebo Samuel", "rank": 46}, {"name": "Khalil Shakir", "rank": 47}, {"name": "Jayden Reed", "rank": 48}, {"name": "Jordan Addison", "rank": 49}, {"name": "Quentin Johnston", "rank": 50}, {"name": "KC Concepcion", "rank": 51}, {"name": "Romeo Doubs", "rank": 52}, {"name": "Chris Godwin", "rank": 53}, {"name": "Jalen Coker", "rank": 54}, {"name": "Rashid Shaheed", "rank": 55}, {"name": "Calvin Ridley", "rank": 56}, {"name": "Jayden Higgins", "rank": 57}, {"name": "Jerry Jeudy", "rank": 58}, {"name": "Tre Tucker", "rank": 59}, {"name": "Jalen McMillan", "rank": 60}, {"name": "Denzel Boston", "rank": 61}, {"name": "Germie Bernard", "rank": 62}, {"name": "Adonai Mitchell", "rank": 63}, {"name": "Jalen Nailor", "rank": 64}, {"name": "Rashod Bateman", "rank": 65}, {"name": "Antonio Williams", "rank": 66}, {"name": "Jauan Jennings", "rank": 67}, {"name": "Xavier Legette", "rank": 68}, {"name": "Travis Hunter", "rank": 69}, {"name": "De'Zhaun Stribling", "rank": 70}, {"name": "Malik Washington", "rank": 71}, {"name": "Tank Dell", "rank": 72}, {"name": "Omar Cooper Jr.", "rank": 73}, {"name": "Cooper Kupp", "rank": 74}, {"name": "Darnell Mooney", "rank": 76}, {"name": "Jalen Tolbert", "rank": 77}, {"name": "Tre Harris", "rank": 78}, {"name": "Ryan Flournoy", "rank": 79}, {"name": "Chris Bell", "rank": 80}, {"name": "Dyami Brown", "rank": 81}, {"name": "Darius Slayton", "rank": 82}, {"name": "Jack Bech", "rank": 83}, {"name": "Ja'Kobi Lane", "rank": 84}, {"name": "Treylon Burks", "rank": 85}, {"name": "Caleb Douglas", "rank": 86}, {"name": "Kayshon Boutte", "rank": 87}, {"name": "Tyquan Thornton", "rank": 88}, {"name": "Andrei Iosivas", "rank": 89}, {"name": "Jaylin Noel", "rank": 90}, {"name": "Jahan Dotson", "rank": 91}, {"name": "Isaac TeSlaa", "rank": 92}, {"name": "Pat Bryant", "rank": 93}, {"name": "Savion Williams", "rank": 94}, {"name": "Marvin Mims", "rank": 95}, {"name": "Kavontae Turpin", "rank": 96}, {"name": "Dontayvion Wicks", "rank": 97}, {"name": "Tory Horton", "rank": 98}, {"name": "Ted Hurst", "rank": 99}, {"name": "Jaylin Lane", "rank": 100}, {"name": "DeMario Douglas", "rank": 101}, {"name": "Devaughn Vele", "rank": 102}, {"name": "Nick Westbrook-Ikhine", "rank": 103}, {"name": "Keon Coleman", "rank": 104}, {"name": "Elijah Sarratt", "rank": 105}, {"name": "Ashton Dulin", "rank": 106}, {"name": "Tutu Atwell", "rank": 107}, {"name": "Kevin Coleman Jr.", "rank": 108}, {"name": "Marquise Brown", "rank": 109}, {"name": "Troy Franklin", "rank": 110}, {"name": "Kendrick Bourne", "rank": 111}, {"name": "Kalif Raymond", "rank": 112}, {"name": "Christian Kirk", "rank": 113}, {"name": "Luke McCaffrey", "rank": 114}, {"name": "Josh Palmer", "rank": 115}, {"name": "Cyrus Allen", "rank": 116}, {"name": "Skyler Bell", "rank": 117}, {"name": "Bryce Lance", "rank": 118}, {"name": "Jordan Whittington", "rank": 119}, {"name": "Zavion Thomas", "rank": 120}, {"name": "Odell Beckham Jr.", "rank": 121}, {"name": "Devontez Walker", "rank": 122}, {"name": "Malachi Fields", "rank": 123}, {"name": "Xavier Hutchinson", "rank": 124}, {"name": "Dont'e Thornton Jr.", "rank": 125}, {"name": "Olamide Zaccheaus", "rank": 126}, {"name": "Chimere Dike", "rank": 127}, {"name": "Isaiah Bond", "rank": 128}, {"name": "Konata Mumpfield", "rank": 129}, {"name": "Mack Hollins", "rank": 130}, {"name": "Brenen Thompson", "rank": 131}, {"name": "KeAndre Lambert-Smith", "rank": 132}, {"name": "Kyle T. Williams", "rank": 133}, {"name": "Tez Johnson", "rank": 134}, {"name": "Jimmy Horn Jr.", "rank": 135}, {"name": "Mitchell Tinsley", "rank": 136}, {"name": "Calvin Austin III", "rank": 137}, {"name": "Jalen Royals", "rank": 138}, {"name": "Anthony Gould", "rank": 139}, {"name": "Greg Dortch", "rank": 140}, {"name": "Elic Ayomanor", "rank": 141}, {"name": "Malik Benson", "rank": 142}, {"name": "Isaiah Williams", "rank": 143}, {"name": "Bo Melton", "rank": 144}, {"name": "Ben Skowronek", "rank": 145}, {"name": "Derius Davis", "rank": 146}, {"name": "Xavier Smith", "rank": 147}, {"name": "Tyrell Shavers", "rank": 148}, {"name": "Colbie Young", "rank": 149}, {"name": "Barion Brown", "rank": 150}, {"name": "CJ Daniels", "rank": 151}, {"name": "Malachi Corley", "rank": 152}, {"name": "Demarcus Robinson", "rank": 153}, {"name": "Tai Felton", "rank": 154}, {"name": "Jahdae Walker", "rank": 155}, {"name": "Justin Watson", "rank": 156}, {"name": "Darius Cooper", "rank": 157}, {"name": "Jonathan Mingo", "rank": 158}, {"name": "Laquon Treadwell", "rank": 159}, {"name": "Brycen Tremayne", "rank": 160}, {"name": "Reggie Virgil", "rank": 161}, {"name": "Kaden Wetjen", "rank": 162}, {"name": "Cedric Tillman", "rank": 163}, {"name": "Kameron Johnson", "rank": 164}, {"name": "Arian Smith", "rank": 165}, {"name": "Braxton Berrios", "rank": 166}, {"name": "Charlie Jones", "rank": 167}, {"name": "Myles Price", "rank": 168}, {"name": "LaJohntay Wester", "rank": 169}, {"name": "Britain Covey", "rank": 170}, {"name": "JuJu Smith-Schuster", "rank": 171}, {"name": "Nikko Remigio", "rank": 172}, {"name": "Jacob Cowing", "rank": 173}, {"name": "Ke'Shawn Williams", "rank": 174}, {"name": "Devin Duvernay", "rank": 175}, {"name": "Gage Larvadain", "rank": 176}, {"name": "Mason Tipton", "rank": 177}, {"name": "Efton Chism III", "rank": 178}, {"name": "Skyy Moore", "rank": 179}, {"name": "Dareke Young", "rank": 180}, {"name": "Josh Cameron", "rank": 181}, {"name": "Jalen Brooks", "rank": 182}, {"name": "Michael Bandy", "rank": 183}, {"name": "Jeshaun Jones", "rank": 184}, {"name": "Mason Kinsey", "rank": 185}], "TE": [{"name": "Trey McBride", "rank": 1}, {"name": "Brock Bowers", "rank": 2}, {"name": "Tyler Warren", "rank": 3}, {"name": "Colston Loveland", "rank": 4}, {"name": "Sam LaPorta", "rank": 5}, {"name": "Harold Fannin Jr.", "rank": 6}, {"name": "Kyle Pitts", "rank": 7}, {"name": "George Kittle", "rank": 8}, {"name": "Travis Kelce", "rank": 9}, {"name": "Dallas Goedert", "rank": 10}, {"name": "Tucker Kraft", "rank": 11}, {"name": "Mark Andrews", "rank": 12}, {"name": "Jake Ferguson", "rank": 13}, {"name": "Kenyon Sadiq", "rank": 14}, {"name": "T.J. Hockenson", "rank": 15}, {"name": "Isaiah Likely", "rank": 16}, {"name": "Dalton Kincaid", "rank": 17}, {"name": "Hunter Henry", "rank": 18}, {"name": "Juwan Johnson", "rank": 19}, {"name": "Brenton Strange", "rank": 20}, {"name": "Pat Freiermuth", "rank": 21}, {"name": "Terrance Ferguson", "rank": 22}, {"name": "Dalton Schultz", "rank": 23}, {"name": "Gunnar Helm", "rank": 24}, {"name": "Chigoziem Okonkwo", "rank": 25}, {"name": "Greg Dulcich", "rank": 26}, {"name": "A.J. Barner", "rank": 27}, {"name": "Mike Gesicki", "rank": 28}, {"name": "Evan Engram", "rank": 29}, {"name": "Oronde Gadsden II", "rank": 30}, {"name": "Cade Otton", "rank": 31}, {"name": "Michael Mayer", "rank": 32}, {"name": "Ja'Tavion Sanders", "rank": 33}, {"name": "David Njoku", "rank": 34}, {"name": "Darnell Washington", "rank": 35}, {"name": "Dawson Knox", "rank": 36}, {"name": "Colby Parkinson", "rank": 37}, {"name": "Theo Johnson", "rank": 38}, {"name": "Tommy Tremble", "rank": 39}, {"name": "Noah Gray", "rank": 40}, {"name": "Elijah Arroyo", "rank": 41}, {"name": "Mason Taylor", "rank": 42}, {"name": "Cole Kmet", "rank": 43}, {"name": "Noah Fant", "rank": 44}, {"name": "Austin Hooper", "rank": 45}, {"name": "Elijah Higgins", "rank": 46}, {"name": "Erick All", "rank": 47}, {"name": "Will Kacmarek", "rank": 48}, {"name": "Drew Sample", "rank": 49}, {"name": "Josh Oliver", "rank": 50}, {"name": "Tyler Higbee", "rank": 51}, {"name": "Eli Stowers", "rank": 52}, {"name": "Eli Raridon", "rank": 53}, {"name": "Charlie Kolar", "rank": 54}, {"name": "Mitchell Evans", "rank": 55}, {"name": "Cade Stover", "rank": 56}, {"name": "John Bates", "rank": 57}, {"name": "Jake Tonges", "rank": 58}, {"name": "Tanner Hudson", "rank": 59}, {"name": "Adam Trautman", "rank": 60}, {"name": "Luke Schoonmaker", "rank": 61}, {"name": "Jackson Hawes", "rank": 62}, {"name": "Mo Alie-Cox", "rank": 63}, {"name": "Daniel Bellinger", "rank": 64}, {"name": "Ben Sinnott", "rank": 65}, {"name": "Jeremy Ruckert", "rank": 66}, {"name": "Luke Musgrave", "rank": 67}, {"name": "Durham Smythe", "rank": 68}, {"name": "Davis Allen", "rank": 69}, {"name": "Foster Moreau", "rank": 70}, {"name": "Nate Adkins", "rank": 71}, {"name": "Brock Wright", "rank": 72}, {"name": "Nate Boerkircher", "rank": 73}, {"name": "Payne Durham", "rank": 74}, {"name": "Joe Royer", "rank": 75}, {"name": "Ben Sims", "rank": 76}, {"name": "Luke Farrell", "rank": 77}, {"name": "Max Klare", "rank": 78}, {"name": "Justin Joly", "rank": 79}, {"name": "Brevyn Spann-Ford", "rank": 80}, {"name": "CJ Dippre", "rank": 81}, {"name": "Tanner Koziol", "rank": 82}, {"name": "Ko Kieft", "rank": 83}, {"name": "Oscar Delp", "rank": 84}, {"name": "Tyler Conklin", "rank": 85}, {"name": "Marlin Klein", "rank": 86}, {"name": "Andrew Ogletree", "rank": 87}, {"name": "Sam Roush", "rank": 88}, {"name": "Matthew Hibner", "rank": 89}, {"name": "Josh Cuevas", "rank": 90}, {"name": "Eric Saubert", "rank": 91}, {"name": "Tip Reiman", "rank": 92}, {"name": "Ian Thomas", "rank": 93}, {"name": "Charlie Woerner", "rank": 94}, {"name": "Johnny Mundt", "rank": 95}, {"name": "Jack Stoll", "rank": 96}, {"name": "Chris Manhertz", "rank": 97}]};
 const TOP_N_BY_POS = { QB: 3, RB: 3, WR: 3, TE: 3 };
+
+// ---------- Team power ranking ----------
+// Average positional rank (QB/RB/WR/TE only) across each team's drafted
+// players — lower average = stronger roster. K/D/other positions excluded
+// from both the sum and the player count, per the ranking rule.
+const RANK_POS = ['QB', 'RB', 'WR', 'TE'];
+const RANK_LOOKUP = {};
+RANK_POS.forEach(pos => {
+  POS_RANKED[pos].forEach(p => { RANK_LOOKUP[pos + '|' + p.name] = p.rank; });
+});
+
+function computeTeamRankings() {
+  const scored = TEAMS.map(code => {
+    let sum = 0, count = 0;
+    picks.filter(pk => pk.draftTeam === code && RANK_POS.includes(pk.pos)).forEach(pk => {
+      const rk = RANK_LOOKUP[pk.pos + '|' + pk.player];
+      if (rk != null) { sum += rk; count += 1; }
+    });
+    return { code, avg: count > 0 ? sum / count : null, count };
+  });
+  // Teams with no ranked players yet sort to the bottom, unranked among themselves.
+  scored.sort((a, b) => {
+    if (a.avg == null && b.avg == null) return 0;
+    if (a.avg == null) return 1;
+    if (b.avg == null) return -1;
+    return a.avg - b.avg;
+  });
+  return scored;
+}
+
+function renderTeamRankings() {
+  const el = document.getElementById('teamRankingsList');
+  if (!el) return;
+  const scored = computeTeamRankings();
+  el.innerHTML = scored.map((t, i) => {
+    const avgText = t.avg == null ? '—' : t.avg.toFixed(1);
+    return `<div class="rank-row">
+      <span class="rank-num">${i + 1}</span>
+      <span class="rank-team">${t.code}</span>
+      <span class="rank-avg">${avgText}</span>
+    </div>`;
+  }).join('');
+}
+
 const posBannerToggle = document.getElementById('posBannerToggle');
 
 function buildTicker() {
