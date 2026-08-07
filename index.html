@@ -361,6 +361,7 @@
     margin-bottom:12px;
   }
   .field-row.triple{grid-template-columns:1fr 1fr 1fr;}
+  .field-row.quad{grid-template-columns:1.3fr .8fr .8fr .8fr; gap:8px;}
   .field{display:flex; flex-direction:column; gap:6px;}
   .field label{
     font-size:10.5px; letter-spacing:.08em; text-transform:uppercase;
@@ -664,40 +665,6 @@
     font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
     margin-bottom:6px;
   }
-
-  .team-rankings-panel{
-    position:fixed;
-    bottom:18px; right:18px;
-    width:190px;
-    background:linear-gradient(160deg,#233250,#1a2740 55%,#152034);
-    border:1px solid rgba(242,177,52,.4);
-    border-radius:var(--radius-md);
-    padding:14px;
-    box-shadow:0 20px 44px -12px rgba(0,0,0,.6);
-    z-index:60;
-  }
-  .rankings-title{
-    font-family:'Oswald',sans-serif;
-    font-size:12.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
-    color:var(--gold);
-  }
-  .rankings-sub{
-    font-size:9.5px; color:var(--muted); margin-bottom:8px;
-  }
-  .rank-row{
-    display:flex; align-items:center; gap:8px;
-    font-family:'JetBrains Mono',monospace;
-    font-size:12px;
-    padding:3px 0;
-  }
-  .rank-num{
-    width:16px; color:var(--muted); font-weight:700;
-  }
-  .rank-team{flex:1; font-weight:700; color:var(--text);}
-  .rank-avg{color:var(--teal); font-weight:700;}
-  @media (max-width:820px){
-    .team-rankings-panel{position:static; width:100%; margin-top:16px;}
-  }
 </style>
 </head>
 <body>
@@ -770,7 +737,7 @@
         <div id="suggestBox" class="suggest-box"></div>
       </div>
 
-      <div class="field-row triple" style="margin-top:12px;">
+      <div class="field-row quad" style="margin-top:12px;">
         <div class="field">
           <label>NFL Team</label>
           <input id="nflTeam" readonly placeholder="—">
@@ -783,6 +750,10 @@
           <label>Pos</label>
           <input id="posField" placeholder="Any" autocomplete="off">
           <div id="posSuggestBox" class="suggest-box"></div>
+        </div>
+        <div class="field">
+          <label>Rank</label>
+          <input id="rankField" readonly placeholder="—">
         </div>
       </div>
 
@@ -857,12 +828,6 @@
     </div>
     <div class="log-list" id="rosterModalList"></div>
   </div>
-</div>
-
-<div class="team-rankings-panel">
-  <div class="rankings-title">Team Power Rankings</div>
-  <div class="rankings-sub">Avg QB/RB/WR/TE rank</div>
-  <div id="teamRankingsList"></div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -1004,6 +969,7 @@ const suggestBox = document.getElementById('suggestBox');
 const nflTeamField = document.getElementById('nflTeam');
 const byeField = document.getElementById('byeWeek');
 const posField = document.getElementById('posField');
+const rankField = document.getElementById('rankField');
 const posSuggestBox = document.getElementById('posSuggestBox');
 const amtInput = document.getElementById('amtInput');
 const formMsg = document.getElementById('formMsg');
@@ -1021,10 +987,12 @@ function isDrafted(name) {
 function clearAutoFields() {
   nflTeamField.value = '';
   byeField.value = '';
+  rankField.value = '';
   selectedPlayer = null;
   nflTeamField.classList.remove('drafted-field');
   byeField.classList.remove('drafted-field');
   posField.classList.remove('drafted-field');
+  rankField.classList.remove('drafted-field');
   logBtn.disabled = false;
 }
 
@@ -1038,11 +1006,15 @@ function applyPlayer(p) {
   closeSuggestions();
   closePosSuggestions();
 
+  const rk = RANK_LOOKUP[p.pos + '|' + p.name];
+  rankField.value = rk != null ? p.pos + rk : '—';
+
   const draftedPick = isDrafted(p.name);
   if (draftedPick) {
     nflTeamField.classList.add('drafted-field');
     byeField.classList.add('drafted-field');
     posField.classList.add('drafted-field');
+    rankField.classList.add('drafted-field');
     formMsg.textContent = `Already drafted by ${draftedPick.draftTeam} for $${draftedPick.amt}.`;
     formMsg.className = 'msg error';
     logBtn.disabled = true;
@@ -1050,6 +1022,7 @@ function applyPlayer(p) {
     nflTeamField.classList.remove('drafted-field');
     byeField.classList.remove('drafted-field');
     posField.classList.remove('drafted-field');
+    rankField.classList.remove('drafted-field');
     formMsg.textContent = '';
     logBtn.disabled = false;
   }
@@ -1271,7 +1244,6 @@ function fillPickList(container, teamCode) {
 function render() {
   undoBtn.disabled = picks.length === 0;
   buildTicker();
-  renderTeamRankings();
 
   // Cap grid
   const capGrid = document.getElementById('capGrid');
@@ -1462,39 +1434,6 @@ const RANK_LOOKUP = {};
 RANK_POS.forEach(pos => {
   POS_RANKED[pos].forEach(p => { RANK_LOOKUP[pos + '|' + p.name] = p.rank; });
 });
-
-function computeTeamRankings() {
-  const scored = TEAMS.map(code => {
-    let sum = 0, count = 0;
-    picks.filter(pk => pk.draftTeam === code && RANK_POS.includes(pk.pos)).forEach(pk => {
-      const rk = RANK_LOOKUP[pk.pos + '|' + pk.player];
-      if (rk != null) { sum += rk; count += 1; }
-    });
-    return { code, avg: count > 0 ? sum / count : null, count };
-  });
-  // Teams with no ranked players yet sort to the bottom, unranked among themselves.
-  scored.sort((a, b) => {
-    if (a.avg == null && b.avg == null) return 0;
-    if (a.avg == null) return 1;
-    if (b.avg == null) return -1;
-    return a.avg - b.avg;
-  });
-  return scored;
-}
-
-function renderTeamRankings() {
-  const el = document.getElementById('teamRankingsList');
-  if (!el) return;
-  const scored = computeTeamRankings();
-  el.innerHTML = scored.map((t, i) => {
-    const avgText = t.avg == null ? '—' : t.avg.toFixed(1);
-    return `<div class="rank-row">
-      <span class="rank-num">${i + 1}</span>
-      <span class="rank-team">${t.code}</span>
-      <span class="rank-avg">${avgText}</span>
-    </div>`;
-  }).join('');
-}
 
 const posBannerToggle = document.getElementById('posBannerToggle');
 
