@@ -414,6 +414,10 @@
     color:var(--blue);
     text-shadow:0 0 8px rgba(56,189,248,.55);
   }
+  .suggest-item .stag.stag-conflict{
+    color:#FF3B4E;
+    text-shadow:0 0 8px rgba(255,59,78,.65);
+  }
   .suggest-empty{padding:12px; font-size:12.5px; color:var(--muted); text-align:center;}
   .suggest-item.drafted{opacity:.5;}
   .suggest-item.drafted .sname{text-decoration:line-through;}
@@ -1041,6 +1045,17 @@ function applyPosFilter(pos) {
   renderSuggestions(searchPlayers(playerInput.value));
 }
 
+// Positions/bye-weeks BY already has rostered — used to flag search-result
+// players who'd create a bye-week clash with BY's existing roster.
+function getByReferenceByes() {
+  const map = {};
+  picks.filter(pk => pk.draftTeam === 'BY' && pk.pos && pk.bye != null).forEach(pk => {
+    if (!map[pk.pos]) map[pk.pos] = new Set();
+    map[pk.pos].add(pk.bye);
+  });
+  return map;
+}
+
 function renderSuggestions(matches) {
   suggestBox.innerHTML = '';
   if (matches.length === 0) {
@@ -1048,12 +1063,19 @@ function renderSuggestions(matches) {
     suggestBox.classList.add('open');
     return;
   }
+  const byRefByes = getByReferenceByes();
   matches.forEach(p => {
     const draftedPick = isDrafted(p.name);
     const item = document.createElement('div');
     item.className = 'suggest-item' + (draftedPick ? ' drafted' : '');
-    const tag = draftedPick ? `Drafted · ${draftedPick.draftTeam}` : `${p.pos} · Bye ${p.bye}`;
-    item.innerHTML = `<span class="sname">${p.name}</span><span class="stag">${tag}</span>`;
+    let tag, tagClass = 'stag';
+    if (draftedPick) {
+      tag = `Drafted · ${draftedPick.draftTeam}`;
+    } else {
+      tag = `${p.pos} · Bye ${p.bye}`;
+      if (byRefByes[p.pos] && byRefByes[p.pos].has(p.bye)) tagClass += ' stag-conflict';
+    }
+    item.innerHTML = `<span class="sname">${p.name}</span><span class="${tagClass}">${tag}</span>`;
     item.addEventListener('mousedown', (e) => { e.preventDefault(); applyPlayer(p); });
     suggestBox.appendChild(item);
   });
