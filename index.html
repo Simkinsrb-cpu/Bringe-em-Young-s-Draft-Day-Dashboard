@@ -354,6 +354,27 @@
   }
   .only-available-toggle:has(input:checked){color:var(--teal);}
 
+  .header-controls{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:8px;
+  }
+  .clear-form-btn{
+    background:transparent;
+    border:1px solid var(--border);
+    color:var(--muted);
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    padding:3px 10px;
+    border-radius:999px;
+    cursor:pointer;
+    transition:border-color .15s, color .15s;
+  }
+  .clear-form-btn:hover{border-color:var(--red); color:var(--red);}
+
   /* ---------- Form ---------- */
   .field-row{
     display:grid;
@@ -726,10 +747,13 @@
     <div class="card">
       <div class="card-header-row">
         <h2>Nominate a Pick</h2>
-        <label class="only-available-toggle">
-          <input type="checkbox" id="onlyAvailableToggle">
-          Only Available
-        </label>
+        <div class="header-controls">
+          <label class="only-available-toggle">
+            <input type="checkbox" id="onlyAvailableToggle">
+            Only Available
+          </label>
+          <button id="clearFormBtn" class="clear-form-btn">Clear</button>
+        </div>
       </div>
       <p class="sub">Select a player, choose the winning team, log the price.</p>
 
@@ -1155,6 +1179,17 @@ document.addEventListener('click', (e) => {
     closeSuggestions();
     closePosSuggestions();
   }
+});
+
+const clearFormBtn = document.getElementById('clearFormBtn');
+clearFormBtn.addEventListener('click', () => {
+  playerInput.value = '';
+  posField.value = '';
+  posFilterValue = '';
+  clearAutoFields();
+  closeSuggestions();
+  closePosSuggestions();
+  formMsg.textContent = '';
 });
 
 function teamStats(code) {
