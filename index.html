@@ -489,16 +489,17 @@
 
   .del-pick-btn{
     flex:0 0 auto;
-    padding:4px 9px;
+    width:18px; height:18px;
+    padding:0;
+    display:flex; align-items:center; justify-content:center;
     border:1px solid #FF2E9A;
-    border-radius:999px;
+    border-radius:50%;
     background:rgba(255,46,154,.10);
     color:#FF2E9A;
     font-family:'Oswald',sans-serif;
     font-weight:700;
     font-size:10px;
-    letter-spacing:.04em;
-    text-transform:uppercase;
+    line-height:1;
     cursor:pointer;
     text-shadow:0 0 6px rgba(255,46,154,.6);
     transition:background .12s ease, box-shadow .12s ease;
@@ -518,7 +519,7 @@
   .pick-row-header .col-player{flex:1;}
   .pick-row-header .col-bye{min-width:52px;}
   .pick-row-header .col-sal{min-width:44px; text-align:right;}
-  .pick-row-header .col-del{min-width:54px;}
+  .pick-row-header .col-del{min-width:18px;}
 
   .msg{
     min-height:18px;
@@ -1194,7 +1195,7 @@ function buildPickRow(pk, hasByeConflict) {
     <span class="pname">${pk.player}</span>
     <span class="pbye${hasByeConflict ? ' conflict' : ''}" title="${hasByeConflict ? 'Bye-week clash with another ' + pk.pos + ' on this roster' : ''}">${pk.bye != null ? pk.bye : '—'}</span>
     <span class="pamt">$${pk.amt}</span>
-    <button class="del-pick-btn" title="Remove ${pk.player} from this roster">Delete</button>`;
+    <button class="del-pick-btn" title="Remove ${pk.player} from this roster">D</button>`;
   row.querySelector('.del-pick-btn').addEventListener('click', () => {
     const idx = picks.indexOf(pk);
     if (idx !== -1) picks.splice(idx, 1);
