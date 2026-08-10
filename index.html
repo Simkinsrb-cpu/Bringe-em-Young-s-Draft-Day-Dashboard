@@ -364,6 +364,9 @@
     cursor:pointer;
   }
   .only-available-toggle:has(input:checked){color:var(--teal);}
+  .conflict-toggle{color:var(--red);}
+  .conflict-toggle input{accent-color:var(--red);}
+  .conflict-toggle:has(input:checked){color:#FF3B4E; text-shadow:0 0 8px rgba(255,59,78,.55);}
 
   .header-controls{
     display:flex;
@@ -780,6 +783,10 @@
             <input type="checkbox" id="onlyAvailableToggle">
             Only Available
           </label>
+          <label class="only-available-toggle conflict-toggle">
+            <input type="checkbox" id="byeConflictToggle">
+            Bye Conflicts
+          </label>
           <button id="clearFormBtn" class="clear-form-btn">Clear</button>
         </div>
       </div>
@@ -1019,6 +1026,7 @@ TEAMS.forEach(t => {
 
 const playerInput = document.getElementById('playerInput');
 const onlyAvailableToggle = document.getElementById('onlyAvailableToggle');
+const byeConflictToggle = document.getElementById('byeConflictToggle');
 const suggestBox = document.getElementById('suggestBox');
 const nflTeamField = document.getElementById('nflTeam');
 const byeField = document.getElementById('byeWeek');
@@ -1093,6 +1101,10 @@ function searchPlayers(query) {
   let pool = PLAYERS;
   if (onlyAvailableToggle.checked) {
     pool = pool.filter(p => !isDrafted(p.name));
+  }
+  if (byeConflictToggle.checked) {
+    const byRefByes = getByReferenceByes();
+    pool = pool.filter(p => !(byRefByes[p.pos] && byRefByes[p.pos].has(p.bye)));
   }
   if (posFilterValue) {
     pool = pool.filter(p => p.pos === posFilterValue);
@@ -1188,6 +1200,10 @@ playerInput.addEventListener('focus', () => {
 });
 
 onlyAvailableToggle.addEventListener('change', () => {
+  if (playerInput.value.trim() !== '' || posFilterValue) renderSuggestions(searchPlayers(playerInput.value));
+});
+
+byeConflictToggle.addEventListener('change', () => {
   if (playerInput.value.trim() !== '' || posFilterValue) renderSuggestions(searchPlayers(playerInput.value));
 });
 
