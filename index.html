@@ -77,6 +77,13 @@
     text-transform:uppercase;
     color:var(--gold);
     margin:0 34px;
+    transition:opacity .6s ease, transform .6s ease, filter .6s ease, letter-spacing .6s ease;
+  }
+  .ticker-item.vanish{
+    opacity:0;
+    transform:scale(.55) translateY(-10px);
+    filter:blur(5px);
+    letter-spacing:.4em;
   }
   .ticker-item .tpos{color:var(--teal); font-weight:700;}
   .ticker-item .tname{color:var(--text); font-weight:600; text-transform:none;}
@@ -1345,6 +1352,41 @@ function render() {
   }
 }
 
+// Special "vanish" effect on the ticker banner when a pick removes one of the
+// currently-displayed leaders — brief fade/shrink + a synthesized whoosh sound.
+function playVanishSound() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    const ctx = new Ctx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(110, ctx.currentTime + 0.55);
+    gain.gain.setValueAtTime(0.16, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.65);
+  } catch (e) { /* audio unavailable — skip silently */ }
+}
+
+function triggerBannerVanish(playerName) {
+  const track = document.getElementById('tickerTrack');
+  if (!track) return false;
+  let found = false;
+  track.querySelectorAll('.ticker-item').forEach(item => {
+    const nameEl = item.querySelector('.tname');
+    if (nameEl && nameEl.textContent === playerName) {
+      item.classList.add('vanish');
+      found = true;
+    }
+  });
+  if (found) playVanishSound();
+  return found;
+}
+
 logBtn.addEventListener('click', () => {
   const p = selectedPlayer;
   const draftTeam = draftTeamSelect.value;
@@ -1377,21 +1419,30 @@ logBtn.addEventListener('click', () => {
     return;
   }
 
-  picks.push({
-    player: p.name, nflTeam: p.team, bye: p.bye, pos: p.pos,
-    draftTeam: draftTeam, amt: amt
-  });
+  const commitPick = () => {
+    picks.push({
+      player: p.name, nflTeam: p.team, bye: p.bye, pos: p.pos,
+      draftTeam: draftTeam, amt: amt
+    });
 
-  formMsg.textContent = `Logged ${p.name} to ${draftTeam} for $${amt}.`;
-  formMsg.className = 'msg ok';
+    formMsg.textContent = `Logged ${p.name} to ${draftTeam} for $${amt}.`;
+    formMsg.className = 'msg ok';
 
-  playerInput.value = '';
-  clearAutoFields();
-  amtInput.value = '';
-  draftTeamSelect.value = '';
+    playerInput.value = '';
+    clearAutoFields();
+    amtInput.value = '';
+    draftTeamSelect.value = '';
 
-  syncPicks();
-  render();
+    syncPicks();
+    render();
+  };
+
+  const wasInBanner = triggerBannerVanish(p.name);
+  if (wasInBanner) {
+    setTimeout(commitPick, 650); // let the vanish animation play before the banner rebuilds
+  } else {
+    commitPick();
+  }
 });
 
 undoBtn.addEventListener('click', () => {
