@@ -794,14 +794,14 @@
 
   <footer>
     <div id="syncStatus" class="sync-status">Connecting…</div>
-    Picks sync live across every device open on this dashboard. Use Reset to start over on purpose.
+    Picks sync live across every device open on this dashboard. Use Reset to restore the starting rosters.
   </footer>
 </div>
 
 <div id="resetOverlay" class="modal-overlay">
   <div class="modal-card">
     <h3>Reset the Draft</h3>
-    <p id="resetModalMsg">Enter the 4-digit PIN to clear every logged pick and reset all team caps back to $200.</p>
+    <p id="resetModalMsg">Enter the 4-digit PIN to reset every team's roster back to the starting rosters.</p>
     <input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off">
     <div id="resetError" class="modal-error"></div>
     <div class="modal-actions">
@@ -1359,7 +1359,7 @@ const pinCancelBtn = document.getElementById('pinCancelBtn');
 function openResetModal() {
   pinInput.value = '';
   resetError.textContent = '';
-  resetModalMsg.textContent = 'Enter the 4-digit PIN to clear every logged pick and reset all team caps back to $200.';
+  resetModalMsg.textContent = "Enter the 4-digit PIN to reset every team's roster back to the starting rosters.";
   pinSubmitBtn.textContent = 'Reset Draft';
   resetOverlay.classList.add('open');
   pinInput.focus();
@@ -1380,7 +1380,7 @@ pinSubmitBtn.addEventListener('click', () => {
     pinInput.focus();
     return;
   }
-  picks = [];
+  picks = SEED_PICKS.slice();
   syncPicks();
   render();
   closeResetModal();
