@@ -215,8 +215,7 @@
   .roster-close:hover{color:var(--text);}
   .roster-modal .log-list{max-height:340px; margin-top:0;}
 
-  .cap-card{cursor:pointer; transition:border-color .15s, transform .12s;}
-  .cap-card:hover{border-color:var(--gold); transform:translateY(-2px);}
+  .cap-card{cursor:pointer;}
 
   /* ---------- Header ---------- */
   header{
@@ -293,7 +292,7 @@
   /* ---------- Layout ---------- */
   .grid{
     display:grid;
-    grid-template-columns:1fr 1.35fr;
+    grid-template-columns:1.35fr 1fr;
     gap:22px;
     align-items:start;
   }
@@ -608,51 +607,84 @@
   .cap-grid{
     display:grid;
     grid-template-columns:1fr 1fr;
-    gap:16px;
+    gap:14px;
   }
   .cap-card{
-    background:#0E1526;
-    border:1px solid var(--border);
-    border-radius:var(--radius-md);
-    padding:20px;
+    background:linear-gradient(165deg,#182444,#0E1526 68%);
+    border:1px solid rgba(255,255,255,.06);
+    border-radius:16px;
+    padding:18px 18px 16px;
     position:relative;
     overflow:hidden;
+    box-shadow:0 1px 0 rgba(255,255,255,.03) inset, 0 10px 20px -16px rgba(0,0,0,.7);
+    transition:border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+  }
+  .cap-card::before{
+    content:'';
+    position:absolute; top:0; left:0; right:0; height:3px;
+    background:var(--accent, var(--gold));
+    opacity:.9;
+  }
+  .cap-card:hover{
+    border-color:var(--accent, var(--gold));
+    transform:translateY(-3px);
+    box-shadow:0 1px 0 rgba(255,255,255,.04) inset, 0 18px 30px -16px rgba(0,0,0,.75);
   }
   .card-top-row{
     display:flex; align-items:center; justify-content:space-between; gap:10px;
   }
   .cap-card .code{
     font-family:'Oswald',sans-serif;
-    font-size:21px; font-weight:600; letter-spacing:.03em;
+    font-size:19px; font-weight:600; letter-spacing:.04em;
   }
   .cap-card .slots{
-    display:flex; align-items:center; gap:8px;
+    display:flex; align-items:center; gap:5px;
     font-family:'JetBrains Mono',monospace;
-    font-size:26px; font-weight:700; color:var(--gold);
+    font-size:13px; font-weight:700;
+    padding:4px 9px 4px 7px;
+    border-radius:999px;
+    border:1.3px solid currentColor;
+    background:rgba(255,255,255,.04);
     cursor:default;
   }
-  .cap-card .slots svg{flex:0 0 auto; width:27px; height:27px;}
+  .cap-card .slots svg{flex:0 0 auto; width:14px; height:14px;}
   .gauge-row{
-    display:flex; align-items:center; gap:18px; margin-top:16px;
+    display:flex; align-items:center; gap:16px; margin-top:14px;
   }
   .gauge{
-    width:104px; height:104px; border-radius:50%;
+    width:96px; height:96px; border-radius:50%;
     display:flex; align-items:center; justify-content:center;
     flex-shrink:0;
+    transition:box-shadow .25s ease;
   }
   .gauge-inner{
-    width:80px; height:80px; border-radius:50%;
-    background:#0E1526;
+    width:76px; height:76px; border-radius:50%;
+    background:#0E1420;
     display:flex; align-items:center; justify-content:center;
     font-family:'JetBrains Mono',monospace;
-    font-size:20px; font-weight:700;
+    font-size:18px; font-weight:700;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.05);
   }
   .cap-figures .left{
     font-family:'JetBrains Mono',monospace;
-    font-size:24px; font-weight:700; line-height:1.1;
+    font-size:25px; font-weight:700; line-height:1.1;
   }
   .cap-figures .of{
-    font-size:10px; color:var(--muted); margin-top:2px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px; font-weight:600; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--muted); margin-top:4px;
+  }
+  .cap-progress{
+    margin-top:14px;
+    height:5px;
+    border-radius:999px;
+    background:rgba(255,255,255,.06);
+    overflow:hidden;
+  }
+  .cap-progress-fill{
+    height:100%;
+    border-radius:999px;
+    transition:width .3s ease, background .3s ease;
   }
 
   footer{
@@ -711,17 +743,7 @@
 
   <div class="grid">
 
-    <!-- LEFT: cap tracker -->
-    <div class="card">
-      <div class="card-header-row">
-        <h2>Cap Tracker</h2>
-        <span class="cap-total-badge">$200 / team</span>
-      </div>
-      <p class="sub">Live per-team budget, updates the instant a pick is logged.</p>
-      <div class="cap-grid" id="capGrid"></div>
-    </div>
-
-    <!-- RIGHT: entry form + BY's picks -->
+    <!-- LEFT: entry form + BY's picks -->
     <div class="card">
       <div class="card-header-row">
         <h2>Nominate a Pick</h2>
@@ -788,6 +810,16 @@
       </div>
       <div class="log-list" id="logList"></div>
       <button id="expandByListBtn" class="expand-toggle">Show All &#9662;</button>
+    </div>
+
+    <!-- RIGHT: cap tracker -->
+    <div class="card">
+      <div class="card-header-row">
+        <h2>Cap Tracker</h2>
+        <span class="cap-total-badge">$200 / team</span>
+      </div>
+      <p class="sub">Live per-team budget, updates the instant a pick is logged.</p>
+      <div class="cap-grid" id="capGrid"></div>
     </div>
 
   </div>
@@ -875,8 +907,8 @@ const POSITION_LEADERS = [
   { pos: "WR", name: "Puka Nacua", rank: 1 },
   { pos: "TE", name: "Trey McBride", rank: 1 }
 ];
-const TEAMS = ["BB", "BY", "DEI", "FISH", "GH", "KC", "MoP", "OS", "PGP", "SLP"];
-const SEED_PICKS = [{"player": "Drake London", "nflTeam": "Atlanta Falcons", "bye": 11, "pos": "WR", "draftTeam": "BB", "amt": 16}, {"player": "Baker Mayfield", "nflTeam": "Tampa Bay Buccaneers", "bye": 10, "pos": "QB", "draftTeam": "BB", "amt": 8}, {"player": "Harold Fannin Jr.", "nflTeam": "Cleveland Browns", "bye": 11, "pos": "TE", "draftTeam": "BB", "amt": 8}, {"player": "Zay Flowers", "nflTeam": "Baltimore Ravens", "bye": 13, "pos": "WR", "draftTeam": "BB", "amt": 12}, {"player": "Sam Darnold", "nflTeam": "Seattle Seahawks", "bye": 11, "pos": "QB", "draftTeam": "BB", "amt": 14}, {"player": "A.J. Brown", "nflTeam": "New England Patriots", "bye": 11, "pos": "WR", "draftTeam": "BB", "amt": 14}, {"player": "Christian McCaffrey", "nflTeam": "San Francisco 49ers", "bye": 8, "pos": "RB", "draftTeam": "BB", "amt": 25}, {"player": "Rhamondre Stevenson", "nflTeam": "New England Patriots", "bye": 11, "pos": "RB", "draftTeam": "BB", "amt": 1}, {"player": "Jahmyr Gibbs", "nflTeam": "Detroit Lions", "bye": 6, "pos": "RB", "draftTeam": "BY", "amt": 26}, {"player": "James Cook", "nflTeam": "Buffalo Bills", "bye": 7, "pos": "RB", "draftTeam": "BY", "amt": 20}, {"player": "Brian Thomas Jr.", "nflTeam": "Jacksonville Jaguars", "bye": 7, "pos": "WR", "draftTeam": "BY", "amt": 9}, {"player": "Justin Herbert", "nflTeam": "Los Angeles Chargers", "bye": 7, "pos": "QB", "draftTeam": "BY", "amt": 13}, {"player": "Jonathan Taylor", "nflTeam": "Indianapolis Colts", "bye": 13, "pos": "RB", "draftTeam": "BY", "amt": 22}, {"player": "Chris Olave", "nflTeam": "New Orleans Saints", "bye": 8, "pos": "WR", "draftTeam": "BY", "amt": 9}, {"player": "Jaxson Dart", "nflTeam": "New York Giants", "bye": 8, "pos": "QB", "draftTeam": "BY", "amt": 13}, {"player": "Tyler Shough", "nflTeam": "New Orleans Saints", "bye": 8, "pos": "QB", "draftTeam": "BY", "amt": 1}, {"player": "Garrett Wilson", "nflTeam": "New York Jets", "bye": 13, "pos": "WR", "draftTeam": "FISH", "amt": 3}, {"player": "Travis Etienne", "nflTeam": "New Orleans Saints", "bye": 8, "pos": "RB", "draftTeam": "FISH", "amt": 13}, {"player": "Amon-Ra St. Brown", "nflTeam": "Detroit Lions", "bye": 6, "pos": "WR", "draftTeam": "FISH", "amt": 32}, {"player": "Trey McBride", "nflTeam": "Arizona Cardinals", "bye": 14, "pos": "TE", "draftTeam": "FISH", "amt": 20}, {"player": "George Pickens", "nflTeam": "Dallas Cowboys", "bye": 14, "pos": "WR", "draftTeam": "FISH", "amt": 10}, {"player": "Michael Pittman Jr.", "nflTeam": "Pittsburgh Steelers", "bye": 9, "pos": "WR", "draftTeam": "FISH", "amt": 1}, {"player": "D'Andre Swift", "nflTeam": "Chicago Bears", "bye": 10, "pos": "RB", "draftTeam": "GH", "amt": 13}, {"player": "Josh Allen", "nflTeam": "Buffalo Bills", "bye": 7, "pos": "QB", "draftTeam": "GH", "amt": 33}, {"player": "Chuba Hubbard", "nflTeam": "Carolina Panthers", "bye": 5, "pos": "RB", "draftTeam": "GH", "amt": 1}, {"player": "Davante Adams", "nflTeam": "Los Angeles Rams", "bye": 11, "pos": "WR", "draftTeam": "GH", "amt": 13}, {"player": "Malik Nabers", "nflTeam": "New York Giants", "bye": 8, "pos": "WR", "draftTeam": "GH", "amt": 19}, {"player": "Tee Higgins", "nflTeam": "Cincinnati Bengals", "bye": 6, "pos": "WR", "draftTeam": "GH", "amt": 13}, {"player": "Tucker Kraft", "nflTeam": "Green Bay Packers", "bye": 11, "pos": "TE", "draftTeam": "GH", "amt": 6}, {"player": "Matthew Stafford", "nflTeam": "Los Angeles Rams", "bye": 11, "pos": "QB", "draftTeam": "GH", "amt": 20}, {"player": "Jerry Jeudy", "nflTeam": "Cleveland Browns", "bye": 11, "pos": "WR", "draftTeam": "KC", "amt": 8}, {"player": "Nico Collins", "nflTeam": "Houston Texans", "bye": 8, "pos": "WR", "draftTeam": "KC", "amt": 24}, {"player": "Brandon Aubrey", "nflTeam": "Dallas Cowboys", "bye": 14, "pos": "K", "draftTeam": "KC", "amt": 5}, {"player": "Omarion Hampton", "nflTeam": "Los Angeles Chargers", "bye": 7, "pos": "RB", "draftTeam": "KC", "amt": 26}, {"player": "Marvin Harrison Jr.", "nflTeam": "Arizona Cardinals", "bye": 14, "pos": "WR", "draftTeam": "KC", "amt": 16}, {"player": "Tyler Warren", "nflTeam": "Indianapolis Colts", "bye": 13, "pos": "TE", "draftTeam": "KC", "amt": 11}, {"player": "Cameron Ward", "nflTeam": "Tennessee Titans", "bye": 9, "pos": "QB", "draftTeam": "KC", "amt": 22}, {"player": "Jaylen Waddle", "nflTeam": "Denver Broncos", "bye": 10, "pos": "WR", "draftTeam": "KC", "amt": 6}, {"player": "Seahawks", "nflTeam": "Seattle Seahawks", "bye": 11, "pos": "D", "draftTeam": "MoP", "amt": 6}, {"player": "Ja'Marr Chase", "nflTeam": "Cincinnati Bengals", "bye": 6, "pos": "WR", "draftTeam": "MoP", "amt": 18}, {"player": "George Kittle", "nflTeam": "San Francisco 49ers", "bye": 8, "pos": "TE", "draftTeam": "MoP", "amt": 19}, {"player": "Ladd McConkey", "nflTeam": "Los Angeles Chargers", "bye": 7, "pos": "WR", "draftTeam": "MoP", "amt": 14}, {"player": "Jaxon Smith-Njigba", "nflTeam": "Seattle Seahawks", "bye": 11, "pos": "WR", "draftTeam": "MoP", "amt": 5}, {"player": "Patrick Mahomes", "nflTeam": "Kansas City Chiefs", "bye": 5, "pos": "QB", "draftTeam": "MoP", "amt": 23}, {"player": "Ken Walker III", "nflTeam": "Kansas City Chiefs", "bye": 5, "pos": "RB", "draftTeam": "MoP", "amt": 17}, {"player": "Emeka Egbuka", "nflTeam": "Tampa Bay Buccaneers", "bye": 10, "pos": "WR", "draftTeam": "MoP", "amt": 17}, {"player": "Bijan Robinson", "nflTeam": "Atlanta Falcons", "bye": 11, "pos": "RB", "draftTeam": "OS", "amt": 50}, {"player": "Brock Purdy", "nflTeam": "San Francisco 49ers", "bye": 8, "pos": "QB", "draftTeam": "OS", "amt": 19}, {"player": "Rashee Rice", "nflTeam": "Kansas City Chiefs", "bye": 5, "pos": "WR", "draftTeam": "OS", "amt": 3}, {"player": "Texans", "nflTeam": "Houston Texans", "bye": 8, "pos": "D", "draftTeam": "OS", "amt": 1}, {"player": "Brock Bowers", "nflTeam": "Las Vegas Raiders", "bye": 13, "pos": "TE", "draftTeam": "OS", "amt": 12}, {"player": "Trevor Lawrence", "nflTeam": "Jacksonville Jaguars", "bye": 7, "pos": "QB", "draftTeam": "OS", "amt": 18}, {"player": "Tetairoa McMillan", "nflTeam": "Carolina Panthers", "bye": 5, "pos": "WR", "draftTeam": "OS", "amt": 14}, {"player": "Quinshon Judkins", "nflTeam": "Cleveland Browns", "bye": 11, "pos": "RB", "draftTeam": "OS", "amt": 11}, {"player": "Wan'Dale Robinson", "nflTeam": "Tennessee Titans", "bye": 9, "pos": "WR", "draftTeam": "PGP", "amt": 6}, {"player": "Kyle Pitts", "nflTeam": "Atlanta Falcons", "bye": 11, "pos": "TE", "draftTeam": "PGP", "amt": 6}, {"player": "Jakobi Meyers", "nflTeam": "Jacksonville Jaguars", "bye": 7, "pos": "WR", "draftTeam": "PGP", "amt": 8}, {"player": "Chris Godwin", "nflTeam": "Tampa Bay Buccaneers", "bye": 10, "pos": "WR", "draftTeam": "PGP", "amt": 8}, {"player": "Puka Nacua", "nflTeam": "Los Angeles Rams", "bye": 11, "pos": "WR", "draftTeam": "PGP", "amt": 10}, {"player": "Bo Nix", "nflTeam": "Denver Broncos", "bye": 10, "pos": "QB", "draftTeam": "PGP", "amt": 19}, {"player": "Jameson Williams", "nflTeam": "Detroit Lions", "bye": 6, "pos": "WR", "draftTeam": "PGP", "amt": 5}, {"player": "Broncos", "nflTeam": "Denver Broncos", "bye": 10, "pos": "D", "draftTeam": "PGP", "amt": 5}, {"player": "Drake Maye", "nflTeam": "New England Patriots", "bye": 11, "pos": "QB", "draftTeam": "SLP", "amt": 12}, {"player": "Chase Brown", "nflTeam": "Cincinnati Bengals", "bye": 6, "pos": "RB", "draftTeam": "SLP", "amt": 5}, {"player": "Jordan Love", "nflTeam": "Green Bay Packers", "bye": 11, "pos": "QB", "draftTeam": "SLP", "amt": 15}, {"player": "Kirk Cousins", "nflTeam": "Las Vegas Raiders", "bye": 13, "pos": "QB", "draftTeam": "SLP", "amt": 8}, {"player": "David Montgomery", "nflTeam": "Houston Texans", "bye": 8, "pos": "RB", "draftTeam": "SLP", "amt": 12}, {"player": "Lions", "nflTeam": "Detroit Lions", "bye": 6, "pos": "D", "draftTeam": "SLP", "amt": 4}, {"player": "Daniel Jones", "nflTeam": "Indianapolis Colts", "bye": 13, "pos": "QB", "draftTeam": "SLP", "amt": 5}, {"player": "Javonte Williams", "nflTeam": "Dallas Cowboys", "bye": 14, "pos": "RB", "draftTeam": "SLP", "amt": 5}, {"player": "Joe Burrow", "nflTeam": "Cincinnati Bengals", "bye": 6, "pos": "QB", "draftTeam": "DEI", "amt": 25}, {"player": "De'Von Achane", "nflTeam": "Miami Dolphins", "bye": 6, "pos": "RB", "draftTeam": "DEI", "amt": 9}, {"player": "Cam Skattebo", "nflTeam": "New York Giants", "bye": 8, "pos": "RB", "draftTeam": "DEI", "amt": 10}, {"player": "A.J. Barner", "nflTeam": "Seattle Seahawks", "bye": 11, "pos": "TE", "draftTeam": "DEI", "amt": 6}, {"player": "Bucky Irving", "nflTeam": "Tampa Bay Buccaneers", "bye": 10, "pos": "RB", "draftTeam": "DEI", "amt": 8}, {"player": "Caleb Williams", "nflTeam": "Chicago Bears", "bye": 10, "pos": "QB", "draftTeam": "DEI", "amt": 28}, {"player": "Jayden Daniels", "nflTeam": "Washington Commanders", "bye": 7, "pos": "QB", "draftTeam": "DEI", "amt": 26}, {"player": "Rams", "nflTeam": "Los Angeles Rams", "bye": 11, "pos": "D", "draftTeam": "DEI", "amt": 1}];
+const TEAMS = ["BB", "BY", "DEI", "FISH", "GH", "KC", "MoP", "OS", "PGP", "SD"];
+const SEED_PICKS = [{"player": "Drake London", "nflTeam": "Atlanta Falcons", "bye": 11, "pos": "WR", "draftTeam": "BB", "amt": 16}, {"player": "Baker Mayfield", "nflTeam": "Tampa Bay Buccaneers", "bye": 10, "pos": "QB", "draftTeam": "BB", "amt": 8}, {"player": "Harold Fannin Jr.", "nflTeam": "Cleveland Browns", "bye": 11, "pos": "TE", "draftTeam": "BB", "amt": 8}, {"player": "Zay Flowers", "nflTeam": "Baltimore Ravens", "bye": 13, "pos": "WR", "draftTeam": "BB", "amt": 12}, {"player": "Sam Darnold", "nflTeam": "Seattle Seahawks", "bye": 11, "pos": "QB", "draftTeam": "BB", "amt": 14}, {"player": "A.J. Brown", "nflTeam": "New England Patriots", "bye": 11, "pos": "WR", "draftTeam": "BB", "amt": 14}, {"player": "Christian McCaffrey", "nflTeam": "San Francisco 49ers", "bye": 8, "pos": "RB", "draftTeam": "BB", "amt": 25}, {"player": "Rhamondre Stevenson", "nflTeam": "New England Patriots", "bye": 11, "pos": "RB", "draftTeam": "BB", "amt": 1}, {"player": "Jahmyr Gibbs", "nflTeam": "Detroit Lions", "bye": 6, "pos": "RB", "draftTeam": "BY", "amt": 26}, {"player": "James Cook", "nflTeam": "Buffalo Bills", "bye": 7, "pos": "RB", "draftTeam": "BY", "amt": 20}, {"player": "Brian Thomas Jr.", "nflTeam": "Jacksonville Jaguars", "bye": 7, "pos": "WR", "draftTeam": "BY", "amt": 9}, {"player": "Justin Herbert", "nflTeam": "Los Angeles Chargers", "bye": 7, "pos": "QB", "draftTeam": "BY", "amt": 13}, {"player": "Jonathan Taylor", "nflTeam": "Indianapolis Colts", "bye": 13, "pos": "RB", "draftTeam": "BY", "amt": 22}, {"player": "Chris Olave", "nflTeam": "New Orleans Saints", "bye": 8, "pos": "WR", "draftTeam": "BY", "amt": 9}, {"player": "Jaxson Dart", "nflTeam": "New York Giants", "bye": 8, "pos": "QB", "draftTeam": "BY", "amt": 13}, {"player": "Tyler Shough", "nflTeam": "New Orleans Saints", "bye": 8, "pos": "QB", "draftTeam": "BY", "amt": 1}, {"player": "Garrett Wilson", "nflTeam": "New York Jets", "bye": 13, "pos": "WR", "draftTeam": "FISH", "amt": 3}, {"player": "Travis Etienne", "nflTeam": "New Orleans Saints", "bye": 8, "pos": "RB", "draftTeam": "FISH", "amt": 13}, {"player": "Amon-Ra St. Brown", "nflTeam": "Detroit Lions", "bye": 6, "pos": "WR", "draftTeam": "FISH", "amt": 32}, {"player": "Trey McBride", "nflTeam": "Arizona Cardinals", "bye": 14, "pos": "TE", "draftTeam": "FISH", "amt": 20}, {"player": "George Pickens", "nflTeam": "Dallas Cowboys", "bye": 14, "pos": "WR", "draftTeam": "FISH", "amt": 10}, {"player": "Michael Pittman Jr.", "nflTeam": "Pittsburgh Steelers", "bye": 9, "pos": "WR", "draftTeam": "FISH", "amt": 1}, {"player": "D'Andre Swift", "nflTeam": "Chicago Bears", "bye": 10, "pos": "RB", "draftTeam": "GH", "amt": 13}, {"player": "Josh Allen", "nflTeam": "Buffalo Bills", "bye": 7, "pos": "QB", "draftTeam": "GH", "amt": 33}, {"player": "Chuba Hubbard", "nflTeam": "Carolina Panthers", "bye": 5, "pos": "RB", "draftTeam": "GH", "amt": 1}, {"player": "Davante Adams", "nflTeam": "Los Angeles Rams", "bye": 11, "pos": "WR", "draftTeam": "GH", "amt": 13}, {"player": "Malik Nabers", "nflTeam": "New York Giants", "bye": 8, "pos": "WR", "draftTeam": "GH", "amt": 19}, {"player": "Tee Higgins", "nflTeam": "Cincinnati Bengals", "bye": 6, "pos": "WR", "draftTeam": "GH", "amt": 13}, {"player": "Tucker Kraft", "nflTeam": "Green Bay Packers", "bye": 11, "pos": "TE", "draftTeam": "GH", "amt": 6}, {"player": "Matthew Stafford", "nflTeam": "Los Angeles Rams", "bye": 11, "pos": "QB", "draftTeam": "GH", "amt": 20}, {"player": "Jerry Jeudy", "nflTeam": "Cleveland Browns", "bye": 11, "pos": "WR", "draftTeam": "KC", "amt": 8}, {"player": "Nico Collins", "nflTeam": "Houston Texans", "bye": 8, "pos": "WR", "draftTeam": "KC", "amt": 24}, {"player": "Brandon Aubrey", "nflTeam": "Dallas Cowboys", "bye": 14, "pos": "K", "draftTeam": "KC", "amt": 5}, {"player": "Omarion Hampton", "nflTeam": "Los Angeles Chargers", "bye": 7, "pos": "RB", "draftTeam": "KC", "amt": 26}, {"player": "Marvin Harrison Jr.", "nflTeam": "Arizona Cardinals", "bye": 14, "pos": "WR", "draftTeam": "KC", "amt": 16}, {"player": "Tyler Warren", "nflTeam": "Indianapolis Colts", "bye": 13, "pos": "TE", "draftTeam": "KC", "amt": 11}, {"player": "Cameron Ward", "nflTeam": "Tennessee Titans", "bye": 9, "pos": "QB", "draftTeam": "KC", "amt": 22}, {"player": "Jaylen Waddle", "nflTeam": "Denver Broncos", "bye": 10, "pos": "WR", "draftTeam": "KC", "amt": 6}, {"player": "Seahawks", "nflTeam": "Seattle Seahawks", "bye": 11, "pos": "D", "draftTeam": "MoP", "amt": 6}, {"player": "Ja'Marr Chase", "nflTeam": "Cincinnati Bengals", "bye": 6, "pos": "WR", "draftTeam": "MoP", "amt": 18}, {"player": "George Kittle", "nflTeam": "San Francisco 49ers", "bye": 8, "pos": "TE", "draftTeam": "MoP", "amt": 19}, {"player": "Ladd McConkey", "nflTeam": "Los Angeles Chargers", "bye": 7, "pos": "WR", "draftTeam": "MoP", "amt": 14}, {"player": "Jaxon Smith-Njigba", "nflTeam": "Seattle Seahawks", "bye": 11, "pos": "WR", "draftTeam": "MoP", "amt": 5}, {"player": "Patrick Mahomes", "nflTeam": "Kansas City Chiefs", "bye": 5, "pos": "QB", "draftTeam": "MoP", "amt": 23}, {"player": "Ken Walker III", "nflTeam": "Kansas City Chiefs", "bye": 5, "pos": "RB", "draftTeam": "MoP", "amt": 17}, {"player": "Emeka Egbuka", "nflTeam": "Tampa Bay Buccaneers", "bye": 10, "pos": "WR", "draftTeam": "MoP", "amt": 17}, {"player": "Bijan Robinson", "nflTeam": "Atlanta Falcons", "bye": 11, "pos": "RB", "draftTeam": "OS", "amt": 50}, {"player": "Brock Purdy", "nflTeam": "San Francisco 49ers", "bye": 8, "pos": "QB", "draftTeam": "OS", "amt": 19}, {"player": "Rashee Rice", "nflTeam": "Kansas City Chiefs", "bye": 5, "pos": "WR", "draftTeam": "OS", "amt": 3}, {"player": "Texans", "nflTeam": "Houston Texans", "bye": 8, "pos": "D", "draftTeam": "OS", "amt": 1}, {"player": "Brock Bowers", "nflTeam": "Las Vegas Raiders", "bye": 13, "pos": "TE", "draftTeam": "OS", "amt": 12}, {"player": "Trevor Lawrence", "nflTeam": "Jacksonville Jaguars", "bye": 7, "pos": "QB", "draftTeam": "OS", "amt": 18}, {"player": "Tetairoa McMillan", "nflTeam": "Carolina Panthers", "bye": 5, "pos": "WR", "draftTeam": "OS", "amt": 14}, {"player": "Quinshon Judkins", "nflTeam": "Cleveland Browns", "bye": 11, "pos": "RB", "draftTeam": "OS", "amt": 11}, {"player": "Wan'Dale Robinson", "nflTeam": "Tennessee Titans", "bye": 9, "pos": "WR", "draftTeam": "PGP", "amt": 6}, {"player": "Kyle Pitts", "nflTeam": "Atlanta Falcons", "bye": 11, "pos": "TE", "draftTeam": "PGP", "amt": 6}, {"player": "Jakobi Meyers", "nflTeam": "Jacksonville Jaguars", "bye": 7, "pos": "WR", "draftTeam": "PGP", "amt": 8}, {"player": "Chris Godwin", "nflTeam": "Tampa Bay Buccaneers", "bye": 10, "pos": "WR", "draftTeam": "PGP", "amt": 8}, {"player": "Puka Nacua", "nflTeam": "Los Angeles Rams", "bye": 11, "pos": "WR", "draftTeam": "PGP", "amt": 10}, {"player": "Bo Nix", "nflTeam": "Denver Broncos", "bye": 10, "pos": "QB", "draftTeam": "PGP", "amt": 19}, {"player": "Jameson Williams", "nflTeam": "Detroit Lions", "bye": 6, "pos": "WR", "draftTeam": "PGP", "amt": 5}, {"player": "Broncos", "nflTeam": "Denver Broncos", "bye": 10, "pos": "D", "draftTeam": "PGP", "amt": 5}, {"player": "Drake Maye", "nflTeam": "New England Patriots", "bye": 11, "pos": "QB", "draftTeam": "SD", "amt": 12}, {"player": "Chase Brown", "nflTeam": "Cincinnati Bengals", "bye": 6, "pos": "RB", "draftTeam": "SD", "amt": 5}, {"player": "Jordan Love", "nflTeam": "Green Bay Packers", "bye": 11, "pos": "QB", "draftTeam": "SD", "amt": 15}, {"player": "Kirk Cousins", "nflTeam": "Las Vegas Raiders", "bye": 13, "pos": "QB", "draftTeam": "SD", "amt": 8}, {"player": "David Montgomery", "nflTeam": "Houston Texans", "bye": 8, "pos": "RB", "draftTeam": "SD", "amt": 12}, {"player": "Lions", "nflTeam": "Detroit Lions", "bye": 6, "pos": "D", "draftTeam": "SD", "amt": 4}, {"player": "Daniel Jones", "nflTeam": "Indianapolis Colts", "bye": 13, "pos": "QB", "draftTeam": "SD", "amt": 5}, {"player": "Javonte Williams", "nflTeam": "Dallas Cowboys", "bye": 14, "pos": "RB", "draftTeam": "SD", "amt": 5}, {"player": "Joe Burrow", "nflTeam": "Cincinnati Bengals", "bye": 6, "pos": "QB", "draftTeam": "DEI", "amt": 25}, {"player": "De'Von Achane", "nflTeam": "Miami Dolphins", "bye": 6, "pos": "RB", "draftTeam": "DEI", "amt": 9}, {"player": "Cam Skattebo", "nflTeam": "New York Giants", "bye": 8, "pos": "RB", "draftTeam": "DEI", "amt": 10}, {"player": "A.J. Barner", "nflTeam": "Seattle Seahawks", "bye": 11, "pos": "TE", "draftTeam": "DEI", "amt": 6}, {"player": "Bucky Irving", "nflTeam": "Tampa Bay Buccaneers", "bye": 10, "pos": "RB", "draftTeam": "DEI", "amt": 8}, {"player": "Caleb Williams", "nflTeam": "Chicago Bears", "bye": 10, "pos": "QB", "draftTeam": "DEI", "amt": 28}, {"player": "Jayden Daniels", "nflTeam": "Washington Commanders", "bye": 7, "pos": "QB", "draftTeam": "DEI", "amt": 26}, {"player": "Rams", "nflTeam": "Los Angeles Rams", "bye": 11, "pos": "D", "draftTeam": "DEI", "amt": 1}];
 const TOTAL_BUDGET = 200;
 
 const STORAGE_KEY = 'draftCommandCenter_picks_v1'; // local fallback only, used if Firebase can't be reached
@@ -1187,6 +1219,14 @@ function gaugeColor(pct) {
   return `rgb(${CAP_COLOR_STOPS[0].rgb.join(', ')})`;
 }
 
+// Turns a "rgb(r, g, b)" string from gaugeColor() into a translucent
+// "rgba(r, g, b, alpha)" — used for card glows and pill fills.
+function withAlpha(rgbStr, alpha) {
+  const nums = rgbStr.match(/\d+/g);
+  if (!nums) return rgbStr;
+  return `rgba(${nums[0]}, ${nums[1]}, ${nums[2]}, ${alpha})`;
+}
+
 function buildPickRow(pk, hasByeConflict) {
   const row = document.createElement('div');
   row.className = 'pick-row';
@@ -1253,25 +1293,29 @@ function render() {
   TEAMS.forEach(code => {
     const { left, slots } = teamStats(code);
     const pct = Math.max(0, left / TOTAL_BUDGET);
+    const spentPct = Math.max(0, Math.min(1, 1 - pct));
     const color = gaugeColor(pct);
     const deg = Math.round(pct * 360);
     const slotsPct = Math.max(0, 1 - (slots / MAX_ROSTER_SLOTS));
     const slotsColor = gaugeColor(slotsPct);
     const card = document.createElement('div');
     card.className = 'cap-card';
+    card.style.setProperty('--accent', color);
     card.innerHTML = `
       <div class="card-top-row">
         <div class="code">${code}</div>
-        <div class="slots" title="Roster slots filled" style="color:${slotsColor}"><svg viewBox="0 0 24 24" fill="currentColor" width="27" height="27"><path d="M12 12c2.7 0 8 1.34 8 4v2H4v-2c0-2.66 5.3-4 8-4zm0-2a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>${slots}</div>
+        <div class="slots" title="Roster slots filled" style="color:${slotsColor}; background:${withAlpha(slotsColor, .12)}"><svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 12c2.7 0 8 1.34 8 4v2H4v-2c0-2.66 5.3-4 8-4zm0-2a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>${slots}</div>
       </div>
       <div class="gauge-row">
-        <div class="gauge" style="background:conic-gradient(${color} ${deg}deg, #223054 0deg)">
+        <div class="gauge" style="background:conic-gradient(${color} ${deg}deg, rgba(255,255,255,.06) 0deg); box-shadow:0 0 20px -6px ${withAlpha(color, .55)}">
           <div class="gauge-inner" style="color:${color}">${Math.round(pct*100)}%</div>
         </div>
         <div class="cap-figures">
           <div class="left" style="color:${color}">$${left}</div>
+          <div class="of">of $${TOTAL_BUDGET}</div>
         </div>
-      </div>`;
+      </div>
+      <div class="cap-progress"><div class="cap-progress-fill" style="width:${Math.round(spentPct*100)}%; background:${color}"></div></div>`;
     card.addEventListener('click', () => openTeamRosterModal(code));
     capGrid.appendChild(card);
   });
