@@ -220,7 +220,7 @@
   /* ---------- Header ---------- */
   header{
     display:grid;
-    grid-template-columns:1.35fr 1fr 1fr;
+    grid-template-columns:1fr 1.35fr 1fr;
     align-items:flex-end;
     gap:16px;
     margin-bottom:26px;
@@ -294,12 +294,16 @@
   /* ---------- Layout ---------- */
   .grid{
     display:grid;
-    grid-template-columns:1.35fr 1fr 1fr;
+    grid-template-columns:1fr 1.35fr 1fr;
     gap:22px;
     align-items:start;
   }
   @media (max-width:1100px){
     .grid{grid-template-columns:1fr;}
+  }
+  .cap-tracker-panel{margin-top:-100px;}
+  @media (max-width:1100px){
+    .cap-tracker-panel{margin-top:0;}
   }
   .card{
     background:linear-gradient(180deg,var(--panel-2),var(--panel));
@@ -851,7 +855,33 @@
 
   <div class="grid">
 
-    <!-- LEFT: entry form + BY's picks -->
+    <!-- LEFT: league message board -->
+    <div class="card chat-card">
+      <div class="card-header-row">
+        <h2>Message Board</h2>
+        <span class="cap-total-badge" id="chatCountBadge">0 msgs</span>
+      </div>
+      <p class="sub">Talk trash, coordinate trades, call out steals — synced live for the whole league.</p>
+      <div class="chat-list" id="chatList"></div>
+
+      <div class="chat-signin" id="chatSignin">
+        <label for="chatSigninInput">Enter your name to post</label>
+        <div class="chat-input-row">
+          <input id="chatSigninInput" type="text" placeholder="Your name" maxlength="24" autocomplete="off">
+          <button id="chatSigninBtn" class="chat-action-btn">Join Chat</button>
+        </div>
+      </div>
+
+      <div class="chat-compose" id="chatCompose" style="display:none;">
+        <div class="chat-whoami">Posting as <strong id="chatWhoamiName"></strong> &middot; <button id="chatSwitchBtn" type="button" class="chat-switch-btn">switch</button></div>
+        <div class="chat-input-row">
+          <input id="chatMsgInput" type="text" placeholder="Say something…" maxlength="300" autocomplete="off">
+          <button id="chatSendBtn" class="chat-action-btn">Send</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTER: entry form + BY's picks -->
     <div class="card">
       <div class="card-header-row">
         <h2>Nominate a Pick</h2>
@@ -926,40 +956,14 @@
       <button id="expandByListBtn" class="expand-toggle">Show All &#9662;</button>
     </div>
 
-    <!-- CENTER: cap tracker -->
-    <div class="card">
+    <!-- RIGHT: cap tracker (shifted up toward the Reset button) -->
+    <div class="card cap-tracker-panel">
       <div class="card-header-row">
         <h2>Cap Tracker</h2>
         <span class="cap-total-badge">$200 / team</span>
       </div>
       <p class="sub">Live per-team budget, updates the instant a pick is logged.</p>
       <div class="cap-grid" id="capGrid"></div>
-    </div>
-
-    <!-- RIGHT: league message board -->
-    <div class="card chat-card">
-      <div class="card-header-row">
-        <h2>Message Board</h2>
-        <span class="cap-total-badge" id="chatCountBadge">0 msgs</span>
-      </div>
-      <p class="sub">Talk trash, coordinate trades, call out steals — synced live for the whole league.</p>
-      <div class="chat-list" id="chatList"></div>
-
-      <div class="chat-signin" id="chatSignin">
-        <label for="chatSigninInput">Enter your name to post</label>
-        <div class="chat-input-row">
-          <input id="chatSigninInput" type="text" placeholder="Your name" maxlength="24" autocomplete="off">
-          <button id="chatSigninBtn" class="chat-action-btn">Join Chat</button>
-        </div>
-      </div>
-
-      <div class="chat-compose" id="chatCompose" style="display:none;">
-        <div class="chat-whoami">Posting as <strong id="chatWhoamiName"></strong> &middot; <button id="chatSwitchBtn" type="button" class="chat-switch-btn">switch</button></div>
-        <div class="chat-input-row">
-          <input id="chatMsgInput" type="text" placeholder="Say something…" maxlength="300" autocomplete="off">
-          <button id="chatSendBtn" class="chat-action-btn">Send</button>
-        </div>
-      </div>
     </div>
 
   </div>
